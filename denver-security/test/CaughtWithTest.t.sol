@@ -11,10 +11,18 @@ contract CaughtWithTestTest is Test {
         caughtWithTest = new CaughtWithTest();
     }
 
+    ///@notice Unit test
     function testSetNumber() public {
         uint256 myNumber = 55;
         caughtWithTest.setNumber(myNumber);
         uint256 expectedNumber = caughtWithTest.number();
         assertEq(myNumber ,expectedNumber, "Number mismatch");
+    }
+
+    ///@notice Fuzz test to check the correctness of the code
+    function testFuzzSetNumber(uint256 num) public {
+        caughtWithTest.setNumber(num);
+        uint256 expectedNum = caughtWithTest.number();
+        assertEq(num, expectedNum, "Fuzz test mismatch");
     }
 }

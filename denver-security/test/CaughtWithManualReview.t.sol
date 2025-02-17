@@ -28,7 +28,9 @@ contract CaughtWithManualReviewTest is Test {
 
     /// @notice Fuzz test to check correctness on random inputs
     function testFuzzDoMath(uint256 input) public {
-        
+        input = bound(input, 0, type(uint256).max - 2);
+        uint256 expected = input + 2;
+        assertEq(c.doMath(input), expected, "Fuzz test failed");
     }
 
 
