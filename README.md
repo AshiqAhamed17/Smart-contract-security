@@ -2,7 +2,7 @@
 
 Welcome to the **Smart Contract Security** repository! 🚀 This repo is dedicated to **learning, practicing, and applying security principles in Ethereum smart contracts**. It serves as a **comprehensive knowledge base** for vulnerabilities, secure coding practices, attack simulations, and real-world security audits.  
 
-## 📌 What’s Inside?  
+## 📌 What’s Inside?
 
 - **Smart Contract Vulnerabilities** – Examples of common exploits like reentrancy, integer overflows, frontrunning, and more.  
 - **Secure Solidity Patterns** – Best practices for writing **secure, gas-efficient, and upgradeable contracts**.  
@@ -50,7 +50,8 @@ Contributions are welcome! Open an **issue** or submit a **pull request** if you
 - [Damn Vulnerable DeFi](https://www.damnvulnerabledefi.xyz/)  
 - [Capture The Ether](https://capturetheether.com/)  
 - [OpenZeppelin Security Guide](https://docs.openzeppelin.com/security/)  
-- [Solidity by Example - Security](https://solidity-by-example.org/security/)  
+- [Solidity by Example - Security](https://solidity-by-example.org/security/)
+- Cyfrin Updraft - Smart Contract Security Course
 
 ---
 
