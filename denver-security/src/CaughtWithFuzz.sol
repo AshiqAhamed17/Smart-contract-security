@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 contract CaughtWithFuzz {
     /*
      * @dev Should never return 0
-     */ 
+     */
     function doMoreMath(uint256 myNumber) public pure returns(uint256){
         if(myNumber == 7){
             return myNumber + 78;

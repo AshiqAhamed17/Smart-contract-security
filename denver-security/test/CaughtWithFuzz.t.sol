@@ -5,14 +5,14 @@ import "forge-std/Test.sol";
 import "../src/CaughtWithFuzz.sol";
 
 contract CaughtWithFuzzTest is Test {
-    CaughtWithFuzz public caughtWithFuzz;
+    CaughtWithFuzz public c;
 
     function setUp() public {
-        caughtWithFuzz = new CaughtWithFuzz();
+        c = new CaughtWithFuzz();
     }
 
     function testFuzz(uint256 randomNumber) public view {
-        uint256 returnedNumber = caughtWithFuzz.doMoreMath(randomNumber);
+        uint256 returnedNumber = c.doMoreMath(randomNumber);
         assert(returnedNumber != 0);
     }
 }
