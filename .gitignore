@@ -1,0 +1,10 @@
+
+# Ignore dependencies
+lib/
+
+# Ignore Forge build artifacts
+out/
+cache/
+
+# Ignore Foundry temporary files
+broadcast/
