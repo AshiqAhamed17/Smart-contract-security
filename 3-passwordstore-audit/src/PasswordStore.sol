@@ -9,17 +9,12 @@ pragma solidity ^0.8.18;  // ?q is this the correct version of compiler ?
  */
 contract PasswordStore {
     
-    ////////////////////////////////////////////////////////////////
-                            EVENTS
-    //////////////////////////////////////////////////////////////
     error PasswordStore__NotOwner();
 
     
-    ///////////////////////////////////////////////////////////////
-                            STORAGE VARIABLES
-    //////////////////////////////////////////////////////////////
+
     address private s_owner;
-    
+
     // @audit the s_password variable is not actually private! This is not a secure place to store a password.
     string private s_password;
 
