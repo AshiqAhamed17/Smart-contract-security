@@ -70,7 +70,78 @@ function setPassword(string memory newPassword) external onlyOwner {
 Anyone can set/update the password of the contract, severly breaking the contract intended functionality
 
 ### Proof of Concept:
+Add the following the `PasswordStore.t.sol` test file.
+
+```javascript
+function test_anyone_can_set_password(address randomAddress) public {
+    vm.assume(randomAddress != owner);
+    string memory expectedPassword = "MyPassword123";
+
+    //Prank as some random address
+    vm.prank(randomAddress);
+
+    // Set the password
+    ///@notice this should not be called by any random address except the owner
+->  passwordStore.setPassword(expectedPassword);
+
+    // Prank as the owner of this contract
+    vm.prank(owner);
+    // Call the function getPassword as the owner, this can be called only by the owner.
+    string memory actualPassword = passwordStore.getPassword();
+
+    assertEq(actualPassword, expectedPassword, "Different password");
+    }
+```
 
 ### Recommended Mitigation:
+Add an access control condition to the `setPassword` function (or) add an onlyOwner modifier to the `setPassword` function
+
+```javascript
+// Access Condition
+if(msg.sender != owner){
+    revert PasswordStore__NotOwner();
+}
+```
+Or use the onlyOwner modifier
+
+```javascript
+// OnlyOwner modifier
+modifier onlyOwner() {
+    require(s_owner == msg.sender);
+    _;
+}
+
+// use the onlyOwner modifier in the setPassword function
+function setPassword(string memory newPassword) external onlyOwner {}
+```
+---
+---
+
+## [S-#] The `PasswordStore::getPassword` natspec indicates a parameter that doesn't exist, causing the natspec to be incorrect.
+
+### Description:
+
+```javascript
+/*
+* @notice This allows only the owner to retrieve the password.
+* @param newPassword The new password to set.
+*/
+//@audit there is no new password param
+function getPassword() external view returns (string memory) {}
+```
+
+The `PasswordStore::getPassword` function signature is `getPassword()` while the natspec says it should be `getPassword(string)`.
+
+
+ 
+### Impact:
+The natspec is incorrect.
+
+
+### Recommended Mitigation:
+Remove the incorrect natspec line.
+```diff
+-    * @param newPassword The new password to set.
+```
 
 

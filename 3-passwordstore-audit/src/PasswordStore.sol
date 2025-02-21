@@ -40,7 +40,7 @@ contract PasswordStore {
     // @by-me added the onlyOwner modifier
     // @audit any one can set the password
     // missing access control
-    function setPassword(string memory newPassword) external onlyOwner { //n no access control , needed onlyOwner
+    function setPassword(string memory newPassword) external { //n no access control , needed onlyOwner
         s_password = newPassword;
         emit SetNetPassword();
     }
