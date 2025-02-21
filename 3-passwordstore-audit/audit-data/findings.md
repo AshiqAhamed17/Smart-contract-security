@@ -1,4 +1,4 @@
-## [S-#] Storing the password on-chain makes it visible to anyone, and no longer private.
+## [H-1] Storing the password on-chain makes it visible to anyone, and no longer private.
 
 ### Description:
 All data stored on-chain is visible to anyone, and can be read directly from the blockchain. The `PasswordStore::s_password` is intended to be a private variable and can be only accessed through the `PasswordStore:: getPassword` function, which is intended to only called by the owner of the contract.
@@ -48,10 +48,16 @@ And get an output of
 ### Recommended Mitigation:
 Due to this the overall contract has to be rethought.
 
+### Likelihood and Impact:
+- Impact: HIGH
+- Likelihood: HIGH
+- Severity: HIGH || CRITICAL
+
 ---
 ---
 
-## [S-#] The `PasswordStore::setPassword` has no access control, meaning anyone can change the password.
+
+## [H-2] The `PasswordStore::setPassword` has no access control, meaning anyone can change the password.
 
 ### Description:
 The `PasswordStore::setPassword` function can only be called by the owner as per the natspec
@@ -114,10 +120,16 @@ modifier onlyOwner() {
 // use the onlyOwner modifier in the setPassword function
 function setPassword(string memory newPassword) external onlyOwner {}
 ```
+
+### Likelihood and Impact:
+- Impact: HIGH
+- Likelihood: HIGH
+- Severity: HIGH || CRITICAL
 ---
 ---
 
-## [S-#] The `PasswordStore::getPassword` natspec indicates a parameter that doesn't exist, causing the natspec to be incorrect.
+
+## [I-1] The `PasswordStore::getPassword` natspec indicates a parameter that doesn't exist, causing the natspec to be incorrect.
 
 ### Description:
 
@@ -143,5 +155,7 @@ Remove the incorrect natspec line.
 ```diff
 -    * @param newPassword The new password to set.
 ```
-
-
+### Likelihood and Impact:
+- Impact: NONE
+- Likelihood: HIGH
+- Severity: Informational/Gas/Non-Crits
