@@ -1,3 +1,49 @@
+# **Smart Contract Security Audit Report**
+
+## **Project Name:** PasswordStore Audit Report
+## **Date:** 22-02-2025
+## **Auditor:** Ashiq Ahamed
+## **Audit Version:** 1.0
+
+---
+
+## **Table of Contents**
+1. **Introduction**
+2. **Scope of Audit**
+3. **Findings Summary**
+4. **Detailed Findings**
+   - [H-1] Storing the password on-chain makes it visible to anyone
+   - [H-2] The `PasswordStore::setPassword` function has no access control
+   - [I-1] Incorrect natspec comment in `PasswordStore::getPassword`
+5. **Conclusion**
+
+---
+
+## **1. Introduction**
+This security audit was conducted on the `PasswordStore` smart contract to identify security vulnerabilities and ensure the reliability of its implementation. The primary objective was to detect critical, high, and informational issues that could impact contract security and functionality.
+
+---
+
+## **2. Scope of Audit**
+The audit focused on reviewing the Solidity smart contract implementation, analyzing:
+- **Access Control Vulnerabilities**
+- **Storage and Privacy Risks**
+- **Logical and Functional Bugs**
+
+---
+
+## **3. Findings Summary**
+| ID  | Title  | Severity  |
+|---- |------- |---------- |
+| H-1 | Storing the password on-chain makes it visible | High/Critical |
+| H-2 | The `setPassword` function lacks access control | High/Critical |
+| I-1 | Incorrect natspec documentation in `getPassword` | Informational |
+
+---
+
+## **4. Detailed Findings**
+
+
 ## [H-1] Storing the password on-chain makes it visible to anyone, and no longer private.
 
 ### Description:
@@ -54,11 +100,9 @@ Due to this the overall contract has to be rethought.
 - Severity: HIGH || CRITICAL
 
 ---
----
 
 
 ## [H-2] The `PasswordStore::setPassword` has no access control, meaning anyone can change the password.
-
 ### Description:
 The `PasswordStore::setPassword` function can only be called by the owner as per the natspec
 ` * @notice This function allows only the owner to set a new password`
@@ -159,3 +203,13 @@ Remove the incorrect natspec line.
 - Impact: NONE
 - Likelihood: HIGH
 - Severity: Informational/Gas/Non-Crits
+
+## Conclusion
+
+This audit highlights critical vulnerabilities in the PasswordStore contract, including password exposure and lack of access control. The contract requires fundamental design changes to ensure security.
+
+### Key Recommendations:
+	•	Never store private data on-chain.
+	•	Implement strict access control mechanisms.
+	•	Ensure accurate documentation (natspec comments).
+By fixing these issues, the contract can be made more secure and robust.
