@@ -78,11 +78,13 @@ contract PuppyRaffle is ERC721, Ownable {
     /// @param newPlayers the list of players to enter the raffle
     function enterRaffle(address[] memory newPlayers) public payable { //ok
         require(msg.value == entranceFee * newPlayers.length, "PuppyRaffle: Must send enough to enter raffle");
+        //? what if then newPlayers.length is 0 ? so the entranceFee is 0.
         for (uint256 i = 0; i < newPlayers.length; i++) {
             players.push(newPlayers[i]);
         }
 
         // Check for duplicates
+        //@audit
         for (uint256 i = 0; i < players.length - 1; i++) {
             for (uint256 j = i + 1; j < players.length; j++) {
                 require(players[i] != players[j], "PuppyRaffle: Duplicate player");
@@ -114,6 +116,8 @@ contract PuppyRaffle is ERC721, Ownable {
                 return i;
             }
         }
+        // ?q What is the player is at index 0 ?
+        //@audit if the player is at index 0, it'll return 0 and the player might think are not active.
         return 0;
     }
 
