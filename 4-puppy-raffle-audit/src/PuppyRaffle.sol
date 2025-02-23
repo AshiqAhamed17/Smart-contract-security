@@ -57,7 +57,7 @@ contract PuppyRaffle is ERC721, Ownable {
     /// @param _entranceFee the cost in wei to enter the raffle
     /// @param _feeAddress the address to send the fees to
     /// @param _raffleDuration the duration in seconds of the raffle
-    constructor(uint256 _entranceFee, address _feeAddress, uint256 _raffleDuration) ERC721("Puppy Raffle", "PR") {
+    constructor(uint256 _entranceFee, address _feeAddress, uint256 _raffleDuration) ERC721("Puppy Raffle", "PR") { //ok
         entranceFee = _entranceFee;
         feeAddress = _feeAddress;
         raffleDuration = _raffleDuration;
@@ -76,7 +76,7 @@ contract PuppyRaffle is ERC721, Ownable {
     /// @notice they have to pay the entrance fee * the number of players
     /// @notice duplicate entrants are not allowed
     /// @param newPlayers the list of players to enter the raffle
-    function enterRaffle(address[] memory newPlayers) public payable {
+    function enterRaffle(address[] memory newPlayers) public payable { //ok
         require(msg.value == entranceFee * newPlayers.length, "PuppyRaffle: Must send enough to enter raffle");
         for (uint256 i = 0; i < newPlayers.length; i++) {
             players.push(newPlayers[i]);
@@ -93,12 +93,13 @@ contract PuppyRaffle is ERC721, Ownable {
 
     /// @param playerIndex the index of the player to refund. You can find it externally by calling `getActivePlayerIndex`
     /// @dev This function will allow there to be blank spots in the array
-    function refund(uint256 playerIndex) public {
+    function refund(uint256 playerIndex) public { 
         address playerAddress = players[playerIndex];
         require(playerAddress == msg.sender, "PuppyRaffle: Only the player can refund");
         require(playerAddress != address(0), "PuppyRaffle: Player already refunded, or is not active");
 
-        payable(msg.sender).sendValue(entranceFee);
+        
+        payable(msg.sender).sendValue(entranceFee); // the sendValue comes form the OpenZeppelin’s Address library
 
         players[playerIndex] = address(0);
         emit RaffleRefunded(playerAddress);
