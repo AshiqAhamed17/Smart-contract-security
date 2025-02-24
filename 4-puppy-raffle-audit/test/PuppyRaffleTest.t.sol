@@ -249,4 +249,27 @@ contract PuppyRaffleTest is Test {
         assert(gasUsedFirst < gasUsedSecond);
 
     }
+
+    function test_reentrancyRefund() public playerEntered {
+
+        address[] memory players = new address[](4);
+        players[0] = playerOne;
+        players[1] = playerTwo;
+        players[2] = playerThree;
+        players[3] = playerFour;
+        puppyRaffle.enterRaffle{value: entranceFee * 4}(players);
+
+        
+    }
+}
+
+contract ReentrancyAttack {
+    PuppyRaffle puppyRaffle;
+    uint256 entranceFee;
+    uint256 attackerIndex;
+
+    constructor(PuppyRaffle _puppyRaffle) {
+        puppyRaffle = _puppyRaffle;
+        entranceFee = puppyRaffle.entranceFee();
+    }
 }

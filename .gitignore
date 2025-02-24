@@ -8,3 +8,5 @@ cache/
 
 # Ignore Foundry temporary files
 broadcast/
+
+.vscode

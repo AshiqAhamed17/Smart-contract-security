@@ -84,7 +84,7 @@ contract PuppyRaffle is ERC721, Ownable {
         }
 
         // Check for duplicates
-        //@audit
+        //@audit DoS
         for (uint256 i = 0; i < players.length - 1; i++) {
             for (uint256 j = i + 1; j < players.length; j++) {
                 require(players[i] != players[j], "PuppyRaffle: Duplicate player");
@@ -100,7 +100,9 @@ contract PuppyRaffle is ERC721, Ownable {
         require(playerAddress == msg.sender, "PuppyRaffle: Only the player can refund");
         require(playerAddress != address(0), "PuppyRaffle: Player already refunded, or is not active");
 
-        
+        //@audit Reentrancy attack
+        //use ReentrancyGuard from openzeppelin : nonReentrent() modifier
+        // Follow CEI
         payable(msg.sender).sendValue(entranceFee); // the sendValue comes form the OpenZeppelin’s Address library
 
         players[playerIndex] = address(0);
