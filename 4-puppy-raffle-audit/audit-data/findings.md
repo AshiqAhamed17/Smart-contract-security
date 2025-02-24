@@ -113,3 +113,13 @@ function enterRaffle(address[] memory newPlayers) public payable {
 .
 
 ```
+
+### [S-#] TITLE (Root Cause + Impact)
+
+**Description:** 
+
+**Impact:** 
+
+**Proof of Concept:**
+
+**Recommended Mitigation:** 
