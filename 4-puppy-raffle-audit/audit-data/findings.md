@@ -70,7 +70,6 @@ Ran 1 test suite in 156.58ms (43.73ms CPU time): 1 tests passed, 0 failed, 0 ski
 ```
 
 
-
 ### Recommended Mitigation:
 There are few recommendations.
 
@@ -113,6 +112,9 @@ function enterRaffle(address[] memory newPlayers) public payable {
 .
 
 ```
+
+---
+---
 
 ## [H-3] Integer overflow of `PuppyRaffle::totalFees` loses fees
 
@@ -221,3 +223,35 @@ If using an older Solidity version (<0.8.0), use OpenZeppelin’s SafeMath to pr
 .
 
 ```
+---
+---
+
+## [I-2]: Solidity pragma should be specific, not wide
+
+Consider using a specific version of Solidity in your contracts instead of a wide version. For example, instead of `pragma solidity ^0.8.0;`, use `pragma solidity 0.8.0;`
+
+<details><summary>1 Found Instances</summary>
+
+
+- Found in src/PuppyRaffle.sol [Line: 2](src/PuppyRaffle.sol#L2)
+
+    ```solidity
+    pragma solidity ^0.7.6;
+    ```
+
+</details>
+
+---
+---
+## [I-2] Using an outdated version of Solidity is not recommended.
+
+### Description
+solc frequently releases new compiler versions. Using an old version prevents access to new Solidity security checks. We also recommend avoiding complex pragma statement.
+
+### Recommendation
+Deploy with a recent version of Solidity (at least `0.8.18`) with no known severe issues.
+
+Use a simple pragma version that allows any of these versions. Consider using the latest version of Solidity for testing.
+
+Please see [Slither](https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities) docs for more information.
+
