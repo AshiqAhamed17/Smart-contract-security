@@ -1,4 +1,4 @@
-## [M-#] Looping through the players array to check for duplicates in the `PuppyRaffle.sol::enterRaffle`is a potential denial of service (DoS) attack, incrementing gas cost for the future entrance.
+## [M-1] Looping through the players array to check for duplicates in the `PuppyRaffle.sol::enterRaffle`is a potential denial of service (DoS) attack, incrementing gas cost for the future entrance.
 
 ### Description:
 The `PuppyRaffle.sol::enterRaffle` function  loops through the `players` array to check for duplicates. However, the longer the `players` array is, the more checks a player will have to make. This mean the gas costs for the players who entered right when the raffle starts will be dramatically lower than those who enter later.
@@ -114,7 +114,7 @@ function enterRaffle(address[] memory newPlayers) public payable {
 
 ```
 
-## [L-1] The `PuppyRaffle.sol::totalFees` can cause a arithmetic overflow issue.
+## [H-3] Integer overflow of `PuppyRaffle::totalFees` loses fees
 
 ### Description:
 In the `PuppyRaffle.sol` the variable totalFees which is of uint64 may cause a `arithmetic overflow` due to this line of code ` totalFees = totalFees + uint64(fee)`. The contract is using Solidity <0.8.0 it doesn't revert rather it wraps the number to 0(uint8 -> max value is 255, I we try to add 1 to 255 it will wrap it to 0 rather than 256)
