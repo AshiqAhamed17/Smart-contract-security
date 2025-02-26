@@ -37,7 +37,7 @@ contract PuppyRaffle is ERC721, Ownable {
     mapping(uint256 => string) public rarityToName;
 
     // Stats for the common puppy (pug)
-    //@audit-gas should be a constant!
+    //report-written should be a constant!
     string private commonImageUri = "ipfs://QmSsYRx3LpDAb1GZQm7zZ1AuHZjfbPkD6J7s9r41xu1mf8";
     uint256 public constant COMMON_RARITY = 70;
     string private constant COMMON = "common";
@@ -63,7 +63,7 @@ contract PuppyRaffle is ERC721, Ownable {
     /// @param _raffleDuration the duration in seconds of the raffle
     constructor(uint256 _entranceFee, address _feeAddress, uint256 _raffleDuration) ERC721("Puppy Raffle", "PR") { //ok
         entranceFee = _entranceFee;
-        //@audit-info check for zero address
+        //report-written check for zero address
         feeAddress = _feeAddress;
         raffleDuration = _raffleDuration;
         raffleStartTime = block.timestamp;
@@ -90,7 +90,7 @@ contract PuppyRaffle is ERC721, Ownable {
 
         // Check for duplicates
         //@audit DoS
-        //@audit gas uint256 playersLength = players.length;
+        //report written uint256 playersLength = players.length;
         for (uint256 i = 0; i < players.length - 1; i++) {
             for (uint256 j = i + 1; j < players.length; j++) {
                 require(players[i] != players[j], "PuppyRaffle: Duplicate player");
@@ -102,18 +102,20 @@ contract PuppyRaffle is ERC721, Ownable {
 
     /// @param playerIndex the index of the player to refund. You can find it externally by calling `getActivePlayerIndex`
     /// @dev This function will allow there to be blank spots in the array
-    function refund(uint256 playerIndex) public { 
+
+    //@audit MEV => Will be covered later
+    function refund(uint256 playerIndex) public {
         address playerAddress = players[playerIndex];
         require(playerAddress == msg.sender, "PuppyRaffle: Only the player can refund");
         require(playerAddress != address(0), "PuppyRaffle: Player already refunded, or is not active");
 
-        //@audit Reentrancy attack
+        //report-written Reentrancy attack
         //use ReentrancyGuard from openzeppelin : nonReentrent() modifier
         // Follow CEI
         payable(msg.sender).sendValue(entranceFee); // the sendValue comes form the OpenZeppelin’s Address library
 
         players[playerIndex] = address(0);
-        //@audit-low event can be manipulated
+        //report-written event can be manipulated
         emit RaffleRefunded(playerAddress);
     }
 
