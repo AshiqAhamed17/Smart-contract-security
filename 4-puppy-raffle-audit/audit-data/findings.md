@@ -395,6 +395,56 @@ Check for `address(0)` when assigning values to address state variables.
 ---
 ---
 
+### [I-4] `PuppyRaffle::selectWinner` should follow CEI, which is not a best practice.
+
+It's best to keep code clean and follow CEI (Checks, Effects, Interactions)
+
+```diff
+-   (bool success,) = winner.call{value: prizePool}("");
+-   require(success, "PuppyRaffle: Failed to send prize pool to winner");
+    _safeMint(winner, tokenId);
++   (bool success,) = winner.call{value: prizePool}("");
++   require(success, "PuppyRaffle: Failed to send prize pool to winner");
+```
+
+---
+---
+
+## [L-1] `PuppyRaffle::getActivePlayerIndex` returns 0 for non-existing players and for the player at index 0, causing a player at index 0 to incorrectly think they have not entered the raffle.
+
+### Description:
+If a player is in the `PuppyRaffle::players` array at index 0, this will return 0, but according to natspec, it will also return 0 if the player is not in the array.
+
+```javascript
+    function getActivePlayerIndex(address player) external view returns (uint256) {
+        for (uint256 i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return i;
+            }
+        }
+        return 0;
+    }
+```
+
+### Impact:
+A player at index 0 may incorrectly think they have not entered the raffle, and attempt to re-enter the raffle again, wasting some gas.
+
+
+### Proof of Concept:
+
+1. User enters the raffle, they are the first entrant.
+2. `PuppyRaffle::getActivePlayerIndex` returns 0.
+3. Users thinks they have not entered correctly due to the documentation.
+
+### Recommended Mitigation: 
+
+The easiest recommendation will be to revert if the player is not in the array instead of returning 0.
+
+You could also reserve the 0th position for any competition, but a better solution might be to return a `int256` where the function returns -1 if the player is not active.
+
+---
+---
+
 # Gas
 
 ## [G-1] Unchanged state variable should be declared constant or immutable.
