@@ -184,7 +184,7 @@ contract PuppyRaffle is ERC721, Ownable {
         raffleStartTime = block.timestamp;
         previousWinner = winner;
 
-        //@audit possible reentrancy attack
+        //report-written the winner couldn't get the money if their fallback() was messed up!!
         //fixes: Follow CEI (just mint the puppy before the call) || use ReentrancyGuard from openzeppelin
         (bool success,) = winner.call{value: prizePool}("");
         require(success, "PuppyRaffle: Failed to send prize pool to winner");
@@ -194,7 +194,7 @@ contract PuppyRaffle is ERC721, Ownable {
     /// @notice this function will withdraw the fees to the feeAddress
     function withdrawFees() external {
 
-        //@audit mishandling ETH !!!
+        //report-skipped mishandling ETH !!!
         require(address(this).balance == uint256(totalFees), "PuppyRaffle: There are currently players active!");
         uint256 feesToWithdraw = totalFees;
         totalFees = 0;
@@ -214,7 +214,7 @@ contract PuppyRaffle is ERC721, Ownable {
     }
 
     /// @notice this function will return true if the msg.sender is an active player
-    //@audit This function isn't used anywhere in the contract. Waste of gas
+    //report-written  This function isn't used anywhere in the contract. Waste of gas
     function _isActivePlayer() internal view returns (bool) {
         for (uint256 i = 0; i < players.length; i++) {
             if (players[i] == msg.sender) {

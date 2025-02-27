@@ -1,4 +1,60 @@
 
+---
+title: Puppy Raffle Audit Report
+author: ASHIQ AHAMED
+date: February 27, 2025
+---
+
+# Puppy Raffle Audit Report
+
+Prepared by: ASHIQ AHAMED
+Lead Auditors:
+
+- [ASHIQ AHAMED](https://github.com/AshiqAhamed17)
+
+Assisting Auditors:
+
+- None
+
+# Table of contents
+<details>
+
+<summary>See table</summary>
+
+- [Puppy Raffle Audit Report](#puppy-raffle-audit-report)
+- [Table of contents](#table-of-contents)
+- [About YOUR\_NAME\_HERE](#about-your_name_here)
+- [Disclaimer](#disclaimer)
+- [Risk Classification](#risk-classification)
+  - [Scope](#scope)
+- [Protocol Summary](#protocol-summary)
+  - [Roles](#roles)
+- [Executive Summary](#executive-summary)
+  - [Issues found](#issues-found)
+- [Findings](#findings)
+  - [High](#high)
+    - [\[H-1\] Reentrancy attack in `PuppyRaffle::refund` allows entrant to drain raffle balance.](#h-1-reentrancy-attack-in-puppyrafflerefund-allows-entrant-to-drain-raffle-balance)
+    - [\[H-2\] Weak randomness in `PuppyRaffle::selectWinner` allows anyone to choose winner](#h-2-weak-randomness-in-puppyraffleselectwinner-allows-anyone-to-choose-winner)
+    - [\[H-3\] Integer overflow of `PuppyRaffle::totalFees` loses fees](#h-3-integer-overflow-of-puppyraffletotalfees-loses-fees)
+    - [\[H-4\] Malicious winner can forever halt the raffle](#h-4-malicious-winner-can-forever-halt-the-raffle)
+  - [Medium](#medium)
+    - [\[M-1\] Looping through players array to check for duplicates in `PuppyRaffle::enterRaffle` is a potential DoS vector, incrementing gas costs for future entrants](#m-1-looping-through-players-array-to-check-for-duplicates-in-puppyraffleenterraffle-is-a-potential-dos-vector-incrementing-gas-costs-for-future-entrants)
+    - [\[M-2\] Balance check on `PuppyRaffle::withdrawFees` enables griefers to selfdestruct a contract to send ETH to the raffle, blocking withdrawals](#m-2-balance-check-on-puppyrafflewithdrawfees-enables-griefers-to-selfdestruct-a-contract-to-send-eth-to-the-raffle-blocking-withdrawals)
+    - [\[M-3\] Unsafe cast of `PuppyRaffle::fee` loses fees](#m-3-unsafe-cast-of-puppyrafflefee-loses-fees)
+    - [\[M-4\] Smart Contract wallet raffle winners without a `receive` or a `fallback` will block the start of a new contest](#m-4-smart-contract-wallet-raffle-winners-without-a-receive-or-a-fallback-will-block-the-start-of-a-new-contest)
+  - [Informational / Non-Critical](#informational--non-critical)
+    - [\[I-1\] Floating pragmas](#i-1-floating-pragmas)
+    - [\[I-2\] Magic Numbers](#i-2-magic-numbers)
+    - [\[I-3\] Test Coverage](#i-3-test-coverage)
+    - [\[I-4\] Zero address validation](#i-4-zero-address-validation)
+    - [\[I-5\] \_isActivePlayer is never used and should be removed](#i-5-_isactiveplayer-is-never-used-and-should-be-removed)
+    - [\[I-6\] Unchanged variables should be constant or immutable](#i-6-unchanged-variables-should-be-constant-or-immutable)
+    - [\[I-7\] Potentially erroneous active player index](#i-7-potentially-erroneous-active-player-index)
+    - [\[I-8\] Zero address may be erroneously considered an active player](#i-8-zero-address-may-be-erroneously-considered-an-active-player)
+  - [Gas (Optional)](#gas-optional)
+</details>
+</br>
+
 ## [H-1] Reentrancy attack in `PuppyRaffle::refund` allows entrant to drain raffle balance.
 
 ###  Description:
@@ -371,7 +427,7 @@ function enterRaffle(address[] memory newPlayers) public payable {
 ---
 
 
-## [M-3] Unsafe cast of `PuppyRaffle::fee` loses fees
+## [M-2] Unsafe cast of `PuppyRaffle::fee` loses fees
 
 ### Description:
  In `PuppyRaffle::selectWinner` their is a type cast of a `uint256` to a `uint64`. This is an unsafe cast, and if the `uint256` is larger than `type(uint64).max`, the value will be truncated. 
@@ -441,6 +497,86 @@ But the potential gas saved isn't worth it if we have to recast and this bug exi
 ---
 ---
 
+## [M-3] Smart Contract wallet raffle winners without a `receive` or a `fallback` will block the start of a new contest
+
+### Description:
+The `PuppyRaffle::selectWinner` function is responsible for resetting the lottery. However, if the winner is a smart contract wallet that rejects payment, the lottery would not be able to restart. 
+
+Non-smart contract wallet users could reenter, but it might cost them a lot of gas due to the duplicate check.
+
+### Impact:
+ The `PuppyRaffle::selectWinner` function could revert many times, and make it very difficult to reset the lottery, preventing a new one from starting. 
+
+Also, true winners would not be able to get paid out, and someone else would win their money!
+
+### Proof of Concept:
+1. 10 smart contract wallets enter the lottery without a fallback or receive function.
+2. The lottery ends
+3. The `selectWinner` function wouldn't work, even though the lottery is over!
+
+### Recommended Mitigation:
+There are a few options to mitigate this issue.
+
+1. Do not allow smart contract wallet entrants (not recommended)
+2. Create a mapping of addresses -> payout so winners can pull their funds out themselves, putting the owness on the winner to claim their prize. (Recommended)
+
+ ---
+ ---
+
+
+## [L-1] `PuppyRaffle::getActivePlayerIndex` returns 0 for non-existing players and for the player at index 0, causing a player at index 0 to incorrectly think they have not entered the raffle.
+
+### Description:
+If a player is in the `PuppyRaffle::players` array at index 0, this will return 0, but according to natspec, it will also return 0 if the player is not in the array.
+
+```javascript
+    function getActivePlayerIndex(address player) external view returns (uint256) {
+        for (uint256 i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return i;
+            }
+        }
+        return 0;
+    }
+```
+
+### Impact:
+A player at index 0 may incorrectly think they have not entered the raffle, and attempt to re-enter the raffle again, wasting some gas.
+
+
+### Proof of Concept:
+
+1. User enters the raffle, they are the first entrant.
+2. `PuppyRaffle::getActivePlayerIndex` returns 0.
+3. Users thinks they have not entered correctly due to the documentation.
+
+### Recommended Mitigation: 
+
+The easiest recommendation will be to revert if the player is not in the array instead of returning 0.
+
+You could also reserve the 0th position for any competition, but a better solution might be to return a `int256` where the function returns -1 if the player is not active.
+
+---
+---
+
+## [L-2] `PuppyRaffle::selectWinner` should follow CEI, which is not a best practice.
+
+It's best to keep code clean and follow CEI (Checks, Effects, Interactions)
+
+```diff
+-   (bool success,) = winner.call{value: prizePool}("");
+-   require(success, "PuppyRaffle: Failed to send prize pool to winner");
+    _safeMint(winner, tokenId);
++   (bool success,) = winner.call{value: prizePool}("");
++   require(success, "PuppyRaffle: Failed to send prize pool to winner");
+```
+
+---
+---
+
+
+# Informational / Non-Critical
+
 ## [I-1]: Solidity pragma should be specific, not wide
 
 Consider using a specific version of Solidity in your contracts instead of a wide version. For example, instead of `pragma solidity ^0.8.0;`, use `pragma solidity 0.8.0;`
@@ -498,22 +634,9 @@ Check for `address(0)` when assigning values to address state variables.
 ---
 ---
 
-## [I-4] `PuppyRaffle::selectWinner` should follow CEI, which is not a best practice.
 
-It's best to keep code clean and follow CEI (Checks, Effects, Interactions)
 
-```diff
--   (bool success,) = winner.call{value: prizePool}("");
--   require(success, "PuppyRaffle: Failed to send prize pool to winner");
-    _safeMint(winner, tokenId);
-+   (bool success,) = winner.call{value: prizePool}("");
-+   require(success, "PuppyRaffle: Failed to send prize pool to winner");
-```
-
----
----
-
-## [I-5] Use of "magic" numbers is discouraged.
+## [I-4] Use of "magic" numbers is discouraged.
 
 It can be confusing to see number literal in the codebase, and it's much more readable if the numbers are given a name.
 
@@ -533,43 +656,23 @@ Replace all magic numbers with constant.
 
 ```
 
+## [I-5] Dead Code
+
+Functions that are not used. Consider removing them.
+
+<details><summary>1 Found Instances</summary>
+
+
+- Found in src/PuppyRaffle.sol [Line: 218](src/PuppyRaffle.sol#L218)
+
+    ```solidity
+        function _isActivePlayer() internal view returns (bool) {
+    ```
+
+</details>
 
 
 
-## [L-1] `PuppyRaffle::getActivePlayerIndex` returns 0 for non-existing players and for the player at index 0, causing a player at index 0 to incorrectly think they have not entered the raffle.
-
-### Description:
-If a player is in the `PuppyRaffle::players` array at index 0, this will return 0, but according to natspec, it will also return 0 if the player is not in the array.
-
-```javascript
-    function getActivePlayerIndex(address player) external view returns (uint256) {
-        for (uint256 i = 0; i < players.length; i++) {
-            if (players[i] == player) {
-                return i;
-            }
-        }
-        return 0;
-    }
-```
-
-### Impact:
-A player at index 0 may incorrectly think they have not entered the raffle, and attempt to re-enter the raffle again, wasting some gas.
-
-
-### Proof of Concept:
-
-1. User enters the raffle, they are the first entrant.
-2. `PuppyRaffle::getActivePlayerIndex` returns 0.
-3. Users thinks they have not entered correctly due to the documentation.
-
-### Recommended Mitigation: 
-
-The easiest recommendation will be to revert if the player is not in the array instead of returning 0.
-
-You could also reserve the 0th position for any competition, but a better solution might be to return a `int256` where the function returns -1 if the player is not active.
-
----
----
 
 # Gas
 
