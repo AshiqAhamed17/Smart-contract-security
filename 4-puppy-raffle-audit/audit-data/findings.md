@@ -110,16 +110,48 @@ function refund(uint256 playerIndex) public {
 ---
 ---
 
+## [H-2]  Weak randomness in `PuppyRaffle::selectWinner` allows anyone to choose winner and influence predict the winning puppy
+
+
+### Description:
+Hashing `msg.sender`, `block.timestamp`, `block.difficulty` together creates a predictable final number. A predictable number is not a good random number. Malicious users can manipulate these values or know them ahead of time to choose the winner of the raffle themselves.
+
+### Impact:
+Any user can choose the winner of the raffle, winning the money and selecting the "rarest" puppy, essentially making it such that all puppies have the same rarity, since you can choose the puppy.
+
+### Proof of Concept:
+There are a few attack vectors here.
+
+1. Validators can know ahead of time the `block.timestamp` and `block.difficulty` and use that knowledge to predict when / how to participate. See the [solidity blog on prevrandao](https://soliditydeveloper.com/prevrandao) here. `block.difficulty` was recently replaced with `prevrandao`.
+
+2. Users can manipulate the `msg.sender` value to result in their index being the winner.
+
+Using on-chain values as a randomness seed is a [well-known attack vector](https://betterprogramming.pub/how-to-generate-truly-random-numbers-in-solidity-and-blockchain-9ced6472dbdf) in the blockchain space.
+
+### Recommended Mitigation:
+Consider using an oracle for your randomness like [Chainlink VRF](https://docs.chain.link/vrf/v2/introduction).
+
+---
+---
+
 ## [H-3] Integer overflow of `PuppyRaffle::totalFees` loses fees
 
 ### Description:
 In the `PuppyRaffle.sol` the variable totalFees which is of uint64 may cause a `arithmetic overflow` due to this line of code ` totalFees = totalFees + uint64(fee)`. The contract is using Solidity <0.8.0 it doesn't revert rather it wraps the number to 0(uint8 -> max value is 255, I we try to add 1 to 255 it will wrap it to 0 rather than 256)
 
+```javascript
+uint64 myVar = type(uint64).max; 
+// myVar will be 18446744073709551615
+myVar = myVar + 1;
+// myVar will be 0
+```
+
 ### Impact:
 
 If the contract is using Solidity <0.8.0, totalFees can silently wrap around, resetting to 0 and losing fee data. Which may result in lower totalFees over the time.
 
-If the contract is using Solidity >= 0.8.0, this may cause reverts is the `totalFees` exceeds the max value of `uint64` which is ` 2^64-1 or 18,446,744,073,709,551,615`
+If the contract is using Solidity >= 0.8.0, this may cause reverts is the `totalFees` exceeds the max value of `uint64` which is ` 2^64-1 or 18,446,744,073,709,551,615`. However, if the `totalFees` variable overflows, the `feeAddress` may not collect the correct amount of fees, leaving fees permanently stuck in the contract.
+
 
 ### Proof of Concept:
 (Proof of Code)
@@ -338,6 +370,77 @@ function enterRaffle(address[] memory newPlayers) public payable {
 ---
 ---
 
+
+## [M-3] Unsafe cast of `PuppyRaffle::fee` loses fees
+
+### Description:
+ In `PuppyRaffle::selectWinner` their is a type cast of a `uint256` to a `uint64`. This is an unsafe cast, and if the `uint256` is larger than `type(uint64).max`, the value will be truncated. 
+
+```javascript
+    function selectWinner() external {
+        require(block.timestamp >= raffleStartTime + raffleDuration, "PuppyRaffle: Raffle not over");
+        require(players.length > 0, "PuppyRaffle: No players in raffle");
+
+        uint256 winnerIndex = uint256(keccak256(abi.encodePacked(msg.sender, block.timestamp, block.difficulty))) % players.length;
+        address winner = players[winnerIndex];
+        uint256 fee = totalFees / 10;
+        uint256 winnings = address(this).balance - fee;
+@>      totalFees = totalFees + uint64(fee);
+        players = new address[](0);
+        emit RaffleWinner(winner, winnings);
+    }
+```
+
+The max value of a `uint64` is `18446744073709551615`. In terms of ETH, this is only ~`18` ETH. Meaning, if more than 18ETH of fees are collected, the `fee` casting will truncate the value. 
+
+### Impact
+ This means the `feeAddress` will not collect the correct amount of fees, leaving fees permanently stuck in the contract.
+
+### Proof of Concept:
+
+1. A raffle proceeds with a little more than 18 ETH worth of fees collected
+2. The line that casts the `fee` as a `uint64` hits
+3. `totalFees` is incorrectly updated with a lower amount
+
+You can replicate this in foundry's chisel by running the following:
+
+```javascript
+uint256 max = type(uint64).max
+uint256 fee = max + 1
+uint64(fee)
+// prints 0
+```
+
+### Recommended Mitigation:
+ Set `PuppyRaffle::totalFees` to a `uint256` instead of a `uint64`, and remove the casting. Their is a comment which says:
+
+```javascript
+// We do some storage packing to save gas
+```
+But the potential gas saved isn't worth it if we have to recast and this bug exists. 
+
+```diff
+-   uint64 public totalFees = 0;
++   uint256 public totalFees = 0;
+.
+.
+.
+    function selectWinner() external {
+        require(block.timestamp >= raffleStartTime + raffleDuration, "PuppyRaffle: Raffle not over");
+        require(players.length >= 4, "PuppyRaffle: Need at least 4 players");
+        uint256 winnerIndex =
+            uint256(keccak256(abi.encodePacked(msg.sender, block.timestamp, block.difficulty))) % players.length;
+        address winner = players[winnerIndex];
+        uint256 totalAmountCollected = players.length * entranceFee;
+        uint256 prizePool = (totalAmountCollected * 80) / 100;
+        uint256 fee = (totalAmountCollected * 20) / 100;
+-       totalFees = totalFees + uint64(fee);
++       totalFees = totalFees + fee;
+```
+
+---
+---
+
 ## [I-1]: Solidity pragma should be specific, not wide
 
 Consider using a specific version of Solidity in your contracts instead of a wide version. For example, instead of `pragma solidity ^0.8.0;`, use `pragma solidity 0.8.0;`
@@ -395,7 +498,7 @@ Check for `address(0)` when assigning values to address state variables.
 ---
 ---
 
-### [I-4] `PuppyRaffle::selectWinner` should follow CEI, which is not a best practice.
+## [I-4] `PuppyRaffle::selectWinner` should follow CEI, which is not a best practice.
 
 It's best to keep code clean and follow CEI (Checks, Effects, Interactions)
 
@@ -409,6 +512,29 @@ It's best to keep code clean and follow CEI (Checks, Effects, Interactions)
 
 ---
 ---
+
+## [I-5] Use of "magic" numbers is discouraged.
+
+It can be confusing to see number literal in the codebase, and it's much more readable if the numbers are given a name.
+
+Replace all magic numbers with constant.
+
+```diff
++       uint256 public constant PRIZE_POOL_PERCENTAGE = 80;
++       uint256 public constant FEE_PERCENTAGE = 20;
++       uint256 public constant TOTAL_PERCENTAGE = 100;
+.
+.
+.
+-       uint256 prizePool = (totalAmountCollected * 80) / 100;
+-       uint256 fee = (totalAmountCollected * 20) / 100;
+         int256 prizePool = (totalAmountCollected * PRIZE_POOL_PERCENTAGE) / TOTAL_PERCENTAGE;
+        uint256 fee = (totalAmountCollected * FEE_PERCENTAGE) / TOTAL_PERCENTAGE;
+
+```
+
+
+
 
 ## [L-1] `PuppyRaffle::getActivePlayerIndex` returns 0 for non-existing players and for the player at index 0, causing a player at index 0 to incorrectly think they have not entered the raffle.
 
