@@ -23,7 +23,7 @@ Assisting Auditors:
 
 - [Puppy Raffle Audit Report](#puppy-raffle-audit-report)
 - [Table of contents](#table-of-contents)
-- [About YOUR\_NAME\_HERE](#about-your_name_here)
+- [About Ashiq Ahamed](#about-ashiq-ahamed)
 - [Disclaimer](#disclaimer)
 - [Risk Classification](#risk-classification)
   - [Scope](#scope)
@@ -33,27 +33,45 @@ Assisting Auditors:
   - [Issues found](#issues-found)
 - [Findings](#findings)
   - [High](#high)
-    - [\[H-1\] Reentrancy attack in `PuppyRaffle::refund` allows entrant to drain raffle balance.](#h-1-reentrancy-attack-in-puppyrafflerefund-allows-entrant-to-drain-raffle-balance)
-    - [\[H-2\] Weak randomness in `PuppyRaffle::selectWinner` allows anyone to choose winner](#h-2-weak-randomness-in-puppyraffleselectwinner-allows-anyone-to-choose-winner)
+    - [\[H-1\] Reentrancy attack in `PuppyRaffle::refund` allows entrant to drain raffle balance](#h-1-reentrancy-attack-in-puppyrafflerefund-allows-entrant-to-drain-raffle-balance)
+
+    - [\[H-2\] Weak randomness in `PuppyRaffle::selectWinner` allows anyone to choose winner and predict the winning puppy](#h-2-weak-randomness-in-puppyraffleselectwinner-allows-anyone-to-choose-winner-and-predict-the-winning-puppy)
+
     - [\[H-3\] Integer overflow of `PuppyRaffle::totalFees` loses fees](#h-3-integer-overflow-of-puppyraffletotalfees-loses-fees)
-    - [\[H-4\] Malicious winner can forever halt the raffle](#h-4-malicious-winner-can-forever-halt-the-raffle)
-  - [Medium](#medium)
-    - [\[M-1\] Looping through players array to check for duplicates in `PuppyRaffle::enterRaffle` is a potential DoS vector, incrementing gas costs for future entrants](#m-1-looping-through-players-array-to-check-for-duplicates-in-puppyraffleenterraffle-is-a-potential-dos-vector-incrementing-gas-costs-for-future-entrants)
-    - [\[M-2\] Balance check on `PuppyRaffle::withdrawFees` enables griefers to selfdestruct a contract to send ETH to the raffle, blocking withdrawals](#m-2-balance-check-on-puppyrafflewithdrawfees-enables-griefers-to-selfdestruct-a-contract-to-send-eth-to-the-raffle-blocking-withdrawals)
-    - [\[M-3\] Unsafe cast of `PuppyRaffle::fee` loses fees](#m-3-unsafe-cast-of-puppyrafflefee-loses-fees)
-    - [\[M-4\] Smart Contract wallet raffle winners without a `receive` or a `fallback` will block the start of a new contest](#m-4-smart-contract-wallet-raffle-winners-without-a-receive-or-a-fallback-will-block-the-start-of-a-new-contest)
+    
+   - [Medium](#medium)
+    - [Looping through the players array to check for duplicates in the `PuppyRaffle.sol::enterRaffle` is a potential denial of service (DoS) attack, incrementing gas cost for the future entrants](#m-1-looping-through-the-players-array-to-check-for-duplicates-in-the-puppyraffleenterraffle-is-a-potential-denial-of-service-dos-attack-incrementing-gas-cost-for-the-future-entrants)
+
+    - [\[M-2\] Unsafe cast of `PuppyRaffle::fee` loses fees](#m-2-unsafe-cast-of-puppyrafflefee-loses-fees)
+
+    - [\[M-3\] Smart Contract wallet raffle winners without a `receive` or a `fallback` will block the start of a new contest](#m-3-smart-contract-wallet-raffle-winners-without-a-receive-or-a-fallback-will-block-the-start-of-a-new-contest)
+
   - [Informational / Non-Critical](#informational--non-critical)
-    - [\[I-1\] Floating pragmas](#i-1-floating-pragmas)
-    - [\[I-2\] Magic Numbers](#i-2-magic-numbers)
-    - [\[I-3\] Test Coverage](#i-3-test-coverage)
-    - [\[I-4\] Zero address validation](#i-4-zero-address-validation)
-    - [\[I-5\] \_isActivePlayer is never used and should be removed](#i-5-_isactiveplayer-is-never-used-and-should-be-removed)
-    - [\[I-6\] Unchanged variables should be constant or immutable](#i-6-unchanged-variables-should-be-constant-or-immutable)
-    - [\[I-7\] Potentially erroneous active player index](#i-7-potentially-erroneous-active-player-index)
-    - [\[I-8\] Zero address may be erroneously considered an active player](#i-8-zero-address-may-be-erroneously-considered-an-active-player)
-  - [Gas (Optional)](#gas-optional)
+    - [\[I-1\] Solidity pragma should be specific, not wide](#i-1-solidity-pragma-should-be-specific-not-wide)
+
+    - [\[I-2\] Using an outdated version of Solidity is not recommended.](#i-2-using-an-outdated-version-of-solidity-is-not-recommended)
+
+    - [\[I-3\] Missing checks for `address(0)` when assigning values to address state variables](#i-3-missing-checks-for-address0-when-assigning-values-to-address-state-variables)
+
+    - [\[I-4\] Use of "magic" numbers is discouraged.](#i-4-use-of-magic-numbers-is-discouraged)
+
+    - [\[I-5\] Dead Code](#i-5-dead-code)
+    
+  - [Gas](#gas)
+    [\[G-1\] Unchanged state variable should be declared constant or immutable](#g-1-unchanged-state-variable-should-be-declared-constant-or-immutable)
+
+    [\[G-2\] Storage variable in a loop should be cached](#g-2-storage-variable-in-a-loop-should-be-cached)
+
+
+     
 </details>
 </br>
+
+# Disclaimer
+
+# About Ashiq Ahamed
+
+# HIGH
 
 ## [H-1] Reentrancy attack in `PuppyRaffle::refund` allows entrant to drain raffle balance.
 
@@ -166,7 +184,7 @@ function refund(uint256 playerIndex) public {
 ---
 ---
 
-## [H-2]  Weak randomness in `PuppyRaffle::selectWinner` allows anyone to choose winner and influence predict the winning puppy
+## [H-2] Weak randomness in `PuppyRaffle::selectWinner` allows anyone to choose winner and predict the winning puppy
 
 
 ### Description:
@@ -307,6 +325,8 @@ If using an older Solidity version (<0.8.0), use OpenZeppelin’s SafeMath to pr
 ```
 ---
 ---
+
+# MEDIUM
 
 ## [M-1] Looping through the players array to check for duplicates in the `PuppyRaffle.sol::enterRaffle`is a potential denial of service (DoS) attack, incrementing gas cost for the future entrance.
 
@@ -577,7 +597,7 @@ It's best to keep code clean and follow CEI (Checks, Effects, Interactions)
 
 # Informational / Non-Critical
 
-## [I-1]: Solidity pragma should be specific, not wide
+## [I-1] Solidity pragma should be specific, not wide
 
 Consider using a specific version of Solidity in your contracts instead of a wide version. For example, instead of `pragma solidity ^0.8.0;`, use `pragma solidity 0.8.0;`
 
