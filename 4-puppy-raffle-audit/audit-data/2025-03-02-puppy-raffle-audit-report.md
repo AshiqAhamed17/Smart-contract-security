@@ -1,9 +1,7 @@
 
----
-title: Puppy Raffle Audit Report
-author: ASHIQ AHAMED
-date: February 27, 2025
----
+| Title                     | Author        | Date               |
+|---------------------------|--------------|--------------------|
+| **Puppy Raffle Audit Report** | ASHIQ AHAMED | February 27, 2025 |
 
 # Puppy Raffle Audit Report
 
@@ -17,10 +15,6 @@ Assisting Auditors:
 - None
 
 # Table of contents
-<details>
-
-<summary>See table</summary>
-
 - [Puppy Raffle Audit Report](#puppy-raffle-audit-report)
 - [Table of contents](#table-of-contents)
 - [About Ashiq Ahamed](#about-ashiq-ahamed)
@@ -46,6 +40,10 @@ Assisting Auditors:
 
     - [\[M-3\] Smart Contract wallet raffle winners without a `receive` or a `fallback` will block the start of a new contest](#m-3-smart-contract-wallet-raffle-winners-without-a-receive-or-a-fallback-will-block-the-start-of-a-new-contest)
 
+   - [\[L-1\] `PuppyRaffle::getActivePlayerIndex` returns 0 for non-existing players and for the player at index 0, causing a player at index 0 to incorrectly think they have not entered the raffle](#l-1-puppyrafflegetactiveplayerindex-returns-0-for-non-existing-players-and-for-the-player-at-index-0-causing-a-player-at-index-0-to-incorrectly-think-they-have-not-entered-the-raffle)
+
+    - [\[L-2\] `PuppyRaffle::selectWinner` should follow CEI, which is not a best practice](#l-2-puppyraffleselectwinner-should-follow-cei-which-is-not-a-best-practice)
+
   - [Informational / Non-Critical](#informational--non-critical)
     - [\[I-1\] Solidity pragma should be specific, not wide](#i-1-solidity-pragma-should-be-specific-not-wide)
 
@@ -62,14 +60,52 @@ Assisting Auditors:
 
     [\[G-2\] Storage variable in a loop should be cached](#g-2-storage-variable-in-a-loop-should-be-cached)
 
-
-     
-</details>
 </br>
 
-# Disclaimer
-
 # About Ashiq Ahamed
+
+# Disclaimer
+ A security audit by the team is not an endorsement of the underlying business or product. The audit was time-boxed and the review of the code was solely on the security aspects of the solidity implementation of the contracts.
+
+# Risk Classification
+
+|            |        | Impact |        |     |
+| ---------- | ------ | ------ | ------ | --- |
+|            |        | High   | Medium | Low |
+|            | High   | H      | H/M    | M   |
+| Likelihood | Medium | H/M    | M      | M/L |
+|            | Low    | M      | M/L    | L   |
+
+## Scope
+
+```
+./src/
+-- PuppyRaffle.sol
+```
+
+# Protocol Summary
+
+Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rarities. A portion of entrance fees go to the winner, and a fee is taken by another address decided by the protocol owner. 
+
+## Roles
+
+- Owner: The only one who can change the `feeAddress`, denominated by the `_owner` variable.
+- Fee User: The user who takes a cut of raffle entrance fees. Denominated by the `feeAddress` variable.
+- Raffle Entrant: Anyone who enters the raffle. Denominated by being in the `players` array.
+
+# Executive Summary
+
+## Issues found
+
+| Severity | Number of issues found |
+| -------- | ---------------------- |
+| High     | 3                      |
+| Medium   | 3                      |
+| Low      | 2                      |
+| Info     | 5                      |
+| Total    | 13                     |
+
+# Findings
 
 # HIGH
 
@@ -106,9 +142,6 @@ All fees paid by raffle entrants could be stolen by the malicious participant.
 4. Attacker calls `PuppyRaffle::refund` function from their attack contract, and drains the contract balance.
 
 ### Proof of Code:
-
-<details>
-<summary> CODE </summary>
 
 Place the following code into `PuppyRaffleTest.t.sol`
 ```javascript
@@ -162,7 +195,6 @@ And this contract as well
     }
 }
 ```
-</details>
 
 ### Recommended Mitigation
 TO prevent this we should have the `PuppyRaffle::refund` function update the `players` array before the external call, Additionally we should move the event emission up as well
@@ -599,18 +631,13 @@ It's best to keep code clean and follow CEI (Checks, Effects, Interactions)
 
 ## [I-1] Solidity pragma should be specific, not wide
 
-Consider using a specific version of Solidity in your contracts instead of a wide version. For example, instead of `pragma solidity ^0.8.0;`, use `pragma solidity 0.8.0;`
-
-<details><summary>1 Found Instances</summary>
-
+Consider using a specific version of Solidity in your contracts instead of a wide version. For example, instead of `pragma solidity ^0.8.0;`, use `pragma solidity 0.8.0;
 
 - Found in src/PuppyRaffle.sol [Line: 2](src/PuppyRaffle.sol#L2)
 
     ```solidity
     pragma solidity ^0.7.6;
     ```
-
-</details>
 
 ---
 ---
@@ -634,7 +661,7 @@ Please see [Slither](https://github.com/crytic/slither/wiki/Detector-Documentati
 
 Check for `address(0)` when assigning values to address state variables.
 
-<details><summary>2 Found Instances</summary>
+### 2 Found Instances
 
 
 - Found in src/PuppyRaffle.sol [Line: 66](src/PuppyRaffle.sol#L66)
@@ -648,8 +675,6 @@ Check for `address(0)` when assigning values to address state variables.
     ```solidity
             feeAddress = newFeeAddress;
     ```
-
-</details>
 
 ---
 ---
@@ -680,7 +705,7 @@ Replace all magic numbers with constant.
 
 Functions that are not used. Consider removing them.
 
-<details><summary>1 Found Instances</summary>
+### 1 Found Instances
 
 
 - Found in src/PuppyRaffle.sol [Line: 218](src/PuppyRaffle.sol#L218)
@@ -688,9 +713,6 @@ Functions that are not used. Consider removing them.
     ```solidity
         function _isActivePlayer() internal view returns (bool) {
     ```
-
-</details>
-
 
 
 
