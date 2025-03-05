@@ -13,3 +13,9 @@
 [submodule "4-puppy-raffle-audit/lib/base64"]
 	path = 4-puppy-raffle-audit/lib/base64
 	url = https://github.com/Brechtpd/base64
+[submodule "5-t-swap-audit/lib/forge-std"]
+	path = 5-t-swap-audit/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "5-t-swap-audit/lib/openzeppelin-contracts"]
+	path = 5-t-swap-audit/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
