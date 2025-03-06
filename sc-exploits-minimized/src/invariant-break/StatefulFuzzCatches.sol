@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity ^0.8.20;
 
 // INVARIANT: doMoreMathAgain should never return 0
 contract StatefulFuzzCatches {
