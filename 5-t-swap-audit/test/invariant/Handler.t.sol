@@ -18,4 +18,10 @@ contract Handler is Test {
         weth = ERC20Mock(_pool.getWeth());
         poolToken = ERC20Mock(_pool.getPoolToken());
     }
+
+    // function depositToken(address token, uint256 amount) public {
+        
+    //     console2.log("Deposited", amount, "of", token);
+
+    // }
 }
