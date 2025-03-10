@@ -4,7 +4,7 @@
  * \ _____    ____                       /
  * -|_   _|  / ___|_      ____ _ _ __    -
  * /  | |____\___ \ \ /\ / / _` | '_ \   \
- * |  | |_____|__) \ V  V / (_| | |_) |  |j;
+ * |  | |_____|__) \ V  V / (_| | |_) |  |
  * \  |_|    |____/ \_/\_/ \__,_| .__/   /
  * -                            |_|      -
  * /                                     \
@@ -49,6 +49,8 @@ contract TSwapPool is ERC20 {
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
+
+    //@audit-info 3 events should be indexed if there are more than 3 params
     event LiquidityAdded(
         address indexed liquidityProvider,
         uint256 wethDeposited,
@@ -114,6 +116,10 @@ contract TSwapPool is ERC20 {
         uint256 wethToDeposit,
         uint256 minimumLiquidityTokensToMint,
         uint256 maximumPoolTokensToDeposit,
+
+        //@audit - high deadline not been used
+        // if someone sets a deadline let's say next block,
+        // but the user can still deposit even after the next block.
         uint64 deadline
     )
         external
@@ -128,6 +134,8 @@ contract TSwapPool is ERC20 {
         }
         if (totalLiquidityTokenSupply() > 0) {
             uint256 wethReserves = i_wethToken.balanceOf(address(this));
+
+            //@audit - gas don't need this line,
             uint256 poolTokenReserves = i_poolToken.balanceOf(address(this));
             // Our invariant says weth, poolTokens, and liquidity tokens must always have the same ratio after the
             // initial deposit
@@ -192,7 +200,11 @@ contract TSwapPool is ERC20 {
         uint256 poolTokensToDeposit,
         uint256 liquidityTokensToMint
     ) private {
+
+        //e follow CEI pattern
         _mint(msg.sender, liquidityTokensToMint);
+        //@audit low this is backwards!
+        // should be (msg.sender, wethToDeposit, poolTokensToDeposi)
         emit LiquidityAdded(msg.sender, poolTokensToDeposit, wethToDeposit);
 
         // Interactions
@@ -273,6 +285,8 @@ contract TSwapPool is ERC20 {
         // totalPoolTokensOfPool) + (wethToDeposit * poolTokensToDeposit) = k
         // (totalWethOfPool * totalPoolTokensOfPool) + (wethToDeposit * totalPoolTokensOfPool) = k - (totalWethOfPool *
         // poolTokensToDeposit) - (wethToDeposit * poolTokensToDeposit)
+
+        //@audit-info usage of magic numbers
         uint256 inputAmountMinusFee = inputAmount * 997;
         uint256 numerator = inputAmountMinusFee * outputReserves;
         uint256 denominator = (inputReserves * 1000) + inputAmountMinusFee;
@@ -290,11 +304,13 @@ contract TSwapPool is ERC20 {
         revertIfZero(outputReserves)
         returns (uint256 inputAmount)
     {
+        //@audit-info use of magic numbers
         return
             ((inputReserves * outputAmount) * 10000) /
             ((outputReserves - outputAmount) * 997);
     }
 
+    //@audit-info this should be external
     function swapExactInput(
         IERC20 inputToken,
         uint256 inputAmount,
@@ -305,6 +321,8 @@ contract TSwapPool is ERC20 {
         public
         revertIfZero(inputAmount)
         revertIfDeadlinePassed(deadline)
+
+        //@audit - low output never been used.
         returns (uint256 output)
     {
         uint256 inputReserves = inputToken.balanceOf(address(this));
@@ -425,7 +443,7 @@ contract TSwapPool is ERC20 {
     }
 
     /*//////////////////////////////////////////////////////////////
-                   EXTERNAL AND PUBLIC VIEW AND PURE
+                EXTERNAL AND PUBLIC VIEW AND PURE
     //////////////////////////////////////////////////////////////*/
     function getPoolTokensToDepositBasedOnWeth(
         uint256 wethToDeposit
@@ -454,6 +472,7 @@ contract TSwapPool is ERC20 {
 
     function getPriceOfOneWethInPoolTokens() external view returns (uint256) {
         return
+            //@audit-info use of magic numbers
             getOutputAmountBasedOnInput(
                 1e18,
                 i_wethToken.balanceOf(address(this)),
@@ -463,6 +482,7 @@ contract TSwapPool is ERC20 {
 
     function getPriceOfOnePoolTokenInWeth() external view returns (uint256) {
         return
+            //@audit-info use of magic numbers
             getOutputAmountBasedOnInput(
                 1e18,
                 i_poolToken.balanceOf(address(this)),
