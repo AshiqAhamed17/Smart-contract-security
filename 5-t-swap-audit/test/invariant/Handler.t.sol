@@ -13,15 +13,20 @@ contract Handler is Test {
     ERC20Mock weth;
     ERC20Mock poolToken;
 
+    address liquidityProvider = makeAddr("lp");
+
+    // Ghost variables
+    uint256 startingX;
+    uint256 startingY;
+    uint256 expectedDeltaStartingX;
+    uint256 expectedDeltaStartingY;
+
+
     constructor(TSwapPool _pool) {
         pool = _pool;
         weth = ERC20Mock(_pool.getWeth());
         poolToken = ERC20Mock(_pool.getPoolToken());
     }
 
-    // function depositToken(address token, uint256 amount) public {
-        
-    //     console2.log("Deposited", amount, "of", token);
-
-    // }
+    
 }
