@@ -50,7 +50,7 @@ contract TSwapPool is ERC20 {
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    //@audit-info 3 events should be indexed if there are more than 3 params
+    //@written-info 3 events should be indexed if there are more than 3 params
     event LiquidityAdded(
         address indexed liquidityProvider,
         uint256 wethDeposited,
@@ -257,7 +257,7 @@ contract TSwapPool is ERC20 {
     }
 
     /*//////////////////////////////////////////////////////////////
-                              GET PRICING
+                            GET PRICING
     //////////////////////////////////////////////////////////////*/
 
     function getOutputAmountBasedOnInput(
@@ -306,6 +306,8 @@ contract TSwapPool is ERC20 {
     {
         //@audit-info use of magic numbers
         return
+
+            //@audit - high used 10_000 instead of 1_000, users are charged way too much
             ((inputReserves * outputAmount) * 10000) /
             ((outputReserves - outputAmount) * 997);
     }
@@ -373,6 +375,8 @@ contract TSwapPool is ERC20 {
             outputReserves
         );
 
+        // No Slippage protection
+        //@audit need a max input amount also a MEV attack
         _swap(inputToken, inputAmount, outputToken, outputAmount);
     }
 
@@ -385,6 +389,9 @@ contract TSwapPool is ERC20 {
         uint256 poolTokenAmount
     ) external returns (uint256 wethAmount) {
         return
+
+            //@audit this is wrong.
+            //swapExactInput
             swapExactOutput(
                 i_poolToken,
                 i_wethToken,
