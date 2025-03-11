@@ -117,7 +117,7 @@ contract TSwapPool is ERC20 {
         uint256 minimumLiquidityTokensToMint,
         uint256 maximumPoolTokensToDeposit,
 
-        //@audit - high deadline not been used
+        //@written - high deadline not been used
         // if someone sets a deadline let's say next block,
         // but the user can still deposit even after the next block.
         uint64 deadline
@@ -135,7 +135,7 @@ contract TSwapPool is ERC20 {
         if (totalLiquidityTokenSupply() > 0) {
             uint256 wethReserves = i_wethToken.balanceOf(address(this));
 
-            //@audit - gas don't need this line,
+            //@written - gas don't need this line,
             uint256 poolTokenReserves = i_poolToken.balanceOf(address(this));
             // Our invariant says weth, poolTokens, and liquidity tokens must always have the same ratio after the
             // initial deposit
@@ -203,7 +203,7 @@ contract TSwapPool is ERC20 {
 
         //e follow CEI pattern
         _mint(msg.sender, liquidityTokensToMint);
-        //@audit low this is backwards!
+        //@written low this is backwards!
         // should be (msg.sender, wethToDeposit, poolTokensToDeposi)
         emit LiquidityAdded(msg.sender, poolTokensToDeposit, wethToDeposit);
 
@@ -286,7 +286,7 @@ contract TSwapPool is ERC20 {
         // (totalWethOfPool * totalPoolTokensOfPool) + (wethToDeposit * totalPoolTokensOfPool) = k - (totalWethOfPool *
         // poolTokensToDeposit) - (wethToDeposit * poolTokensToDeposit)
 
-        //@audit-info usage of magic numbers
+        //@written-info usage of magic numbers
         uint256 inputAmountMinusFee = inputAmount * 997;
         uint256 numerator = inputAmountMinusFee * outputReserves;
         uint256 denominator = (inputReserves * 1000) + inputAmountMinusFee;
@@ -304,7 +304,7 @@ contract TSwapPool is ERC20 {
         revertIfZero(outputReserves)
         returns (uint256 inputAmount)
     {
-        //@audit-info use of magic numbers
+        //@written-info use of magic numbers
         return
 
             //@audit - high used 10_000 instead of 1_000, users are charged way too much
