@@ -307,12 +307,12 @@ contract TSwapPool is ERC20 {
         //@written-info use of magic numbers
         return
 
-            //@audit - high used 10_000 instead of 1_000, users are charged way too much
+            //@written - high used 10_000 instead of 1_000, users are charged way too much
             ((inputReserves * outputAmount) * 10000) /
             ((outputReserves - outputAmount) * 997);
     }
 
-    //@audit-info this should be external
+    //@written-info this should be external
     function swapExactInput(
         IERC20 inputToken,
         uint256 inputAmount,
@@ -324,7 +324,7 @@ contract TSwapPool is ERC20 {
         revertIfZero(inputAmount)
         revertIfDeadlinePassed(deadline)
 
-        //@audit - low output never been used.
+        //@written - low output never been used.
         returns (uint256 output)
     {
         uint256 inputReserves = inputToken.balanceOf(address(this));
@@ -353,7 +353,7 @@ contract TSwapPool is ERC20 {
      * @param inputToken ERC20 token to pull from caller
      * @param outputToken ERC20 token to send to caller
      * @param outputAmount The exact amount of tokens to send to caller
-     * @audit-info Missing param deadline
+     * @written-info Missing param deadline
      */
     function swapExactOutput(
         IERC20 inputToken,

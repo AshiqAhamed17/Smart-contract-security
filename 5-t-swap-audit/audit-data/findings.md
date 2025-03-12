@@ -28,6 +28,55 @@ function deposit(
         returns (uint256 liquidityTokensToMint)
     {
 ```
+---
+---
+
+
+## [H-2] Incorrect fee calculation in `TSwapPool::getInputAmountBasedOnOutput` causes protocll to take too many tokens from users, resulting in lost fees
+
+### Description:
+The getInputAmountBasedOnOutput function is intended to calculate the amount of tokens a user should deposit given an amount of tokens of output tokens. However, the function currently miscalculates the resulting amount. When calculating the fee, it scales the amount by 10_000 instead of 1_000.
+
+### Impact:
+ Protocol takes more fees than expected from users.
+
+## Recommended Mitigation:
+
+```diff
+    function getInputAmountBasedOnOutput(
+        uint256 outputAmount,
+        uint256 inputReserves,
+        uint256 outputReserves
+    )
+        public
+        pure
+        revertIfZero(outputAmount)
+        revertIfZero(outputReserves)
+        returns (uint256 inputAmount)
+    {
+-        return ((inputReserves * outputAmount) * 10_000) / ((outputReserves - outputAmount) * 997);
++        return ((inputReserves * outputAmount) * 1_000) / ((outputReserves - outputAmount) * 997);
+    }
+```
+---
+---
+
+## [H-3] Lack of slippage protection in `TSwapPool::swapExactOutput` causes users to potentially receive way fewer tokens
+
+### Description:
+The `swapExactOutput` function does not include any sort of slippage protection. This function is similar to what is done in `TSwapPool::swapExactInput`, where the function specifies a `minOutputAmount`, the `swapExactOutput` function should specify a `maxInputAmount`. 
+
+### Impact:
+If market conditions change before the transaciton processes, the user could get a much worse swap.
+
+### Proof of Concept:
+1. User inputs a 
+
+### Recommended Mitigation:
+
+
+
+
 
 # LOW
 
@@ -64,9 +113,13 @@ Index event fields make the field more quickly accessible to off-chain tools tha
 
 </details>
 
-## [L-2] `TSwapPool::LiquidityAdded` event is emitted in backwards
+## [L-2] `TSwapPool::LiquidityAdded` event has wrong order of parameters
 
-The event parameters for emitting is provided wrongly i.e, in a wrong order.
+## Description
+When the LiquidityAdded event is emitted in the TSwapPool::_addLiquidityMintAndTransfer function, it logs values in an incorrect order. The poolTokensToDeposit value should go in the third parameter position, whereas the wethToDeposit value should go second.
+
+## Impact
+ Event emission is incorrect, leading to off-chain functions potentially malfunctioning.
 
 ## Recommended Mitigation:
 
@@ -74,6 +127,36 @@ The event parameters for emitting is provided wrongly i.e, in a wrong order.
 -   emit LiquidityAdded(msg.sender, poolTokensToDeposit, wethToDeposit);
 +   emit LiquidityAdded(msg.sender, wethToDeposit, poolTokensToDeposi);
 
+```
+
+## [L-3]  Default value returned by `TSwapPool::swapExactInput` results in incorrect return value given
+
+### Description:
+The `swapExactInput` function is expected to return the actual amount of tokens bought by the caller. However, while it declares the named return value `output` it is never assigned a value, nor uses an explict return statement.
+
+### Impact:
+ The return value will always be 0, giving incorrect information to the caller.
+
+
+## Recommended Mitigation:
+
+```diff
+{
+        uint256 inputReserves = inputToken.balanceOf(address(this));
+        uint256 outputReserves = outputToken.balanceOf(address(this));
+
+-        uint256 outputAmount = getOutputAmountBasedOnInput(inputAmount, inputReserves, outputReserves);
++        output = getOutputAmountBasedOnInput(inputAmount, inputReserves, outputReserves);
+
+-        if (output < minOutputAmount) {
+-            revert TSwapPool__OutputTooLow(outputAmount, minOutputAmount);
++        if (output < minOutputAmount) {
++            revert TSwapPool__OutputTooLow(outputAmount, minOutputAmount);
+        }
+
+-        _swap(inputToken, inputAmount, outputToken, outputAmount);
++        _swap(inputToken, inputAmount, outputToken, output);
+}
 ```
 
 
@@ -160,4 +243,17 @@ Introduce named constants for the fee percentage and denominator base:
 +   uint256 denominator = (inputReserves * FEE_DENOMINATOR) + inputAmountMinusFee;
 ```
 
-## [I-7] ``TSwapPool::swapExactInput` function is public can be restricted to external
+## [I-7] `TSwapPool::swapExactInput` `public` functions not used internally could be marked `external`
+
+Instead of marking a function as `public`, consider marking it as `external` if it is not used internally.
+
+<details><summary>1 Found Instances</summary>
+
+
+- Found in src/TSwapPool.sol [Line: 298](src/TSwapPool.sol#L298)
+
+    ```solidity
+        function swapExactInput(
+    ```
+
+</details>
