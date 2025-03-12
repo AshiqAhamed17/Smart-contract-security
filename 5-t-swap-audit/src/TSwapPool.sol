@@ -116,7 +116,6 @@ contract TSwapPool is ERC20 {
         uint256 wethToDeposit,
         uint256 minimumLiquidityTokensToMint,
         uint256 maximumPoolTokensToDeposit,
-
         //@written - high deadline not been used
         // if someone sets a deadline let's say next block,
         // but the user can still deposit even after the next block.
@@ -200,7 +199,6 @@ contract TSwapPool is ERC20 {
         uint256 poolTokensToDeposit,
         uint256 liquidityTokensToMint
     ) private {
-
         //e follow CEI pattern
         _mint(msg.sender, liquidityTokensToMint);
         //@written low this is backwards!
@@ -306,7 +304,6 @@ contract TSwapPool is ERC20 {
     {
         //@written-info use of magic numbers
         return
-
             //@written - high used 10_000 instead of 1_000, users are charged way too much
             ((inputReserves * outputAmount) * 10000) /
             ((outputReserves - outputAmount) * 997);
@@ -323,9 +320,10 @@ contract TSwapPool is ERC20 {
         public
         revertIfZero(inputAmount)
         revertIfDeadlinePassed(deadline)
-
-        //@written - low output never been used.
-        returns (uint256 output)
+        returns (
+            //@written - low output never been used.
+            uint256 output
+        )
     {
         uint256 inputReserves = inputToken.balanceOf(address(this));
         uint256 outputReserves = outputToken.balanceOf(address(this));
@@ -376,7 +374,7 @@ contract TSwapPool is ERC20 {
         );
 
         // No Slippage protection
-        //@audit need a max input amount also a MEV attack
+        //@written need a max input amount also a MEV attack
         _swap(inputToken, inputAmount, outputToken, outputAmount);
     }
 
@@ -389,9 +387,8 @@ contract TSwapPool is ERC20 {
         uint256 poolTokenAmount
     ) external returns (uint256 wethAmount) {
         return
-
-            //@audit this is wrong.
-            //swapExactInput
+            //@written this is wrong.
+            //swapExactInput needed here
             swapExactOutput(
                 i_poolToken,
                 i_wethToken,
@@ -422,7 +419,7 @@ contract TSwapPool is ERC20 {
             revert TSwapPool__InvalidToken();
         }
 
-        // @audit breaks protocol invariant !!
+        // @written - high breaks protocol invariant !!
         swap_count++;
 
         // Fee-on-transfer type
@@ -479,7 +476,7 @@ contract TSwapPool is ERC20 {
 
     function getPriceOfOneWethInPoolTokens() external view returns (uint256) {
         return
-            //@audit-info use of magic numbers
+            //@written -info use of magic numbers
             getOutputAmountBasedOnInput(
                 1e18,
                 i_wethToken.balanceOf(address(this)),
@@ -489,7 +486,7 @@ contract TSwapPool is ERC20 {
 
     function getPriceOfOnePoolTokenInWeth() external view returns (uint256) {
         return
-            //@audit-info use of magic numbers
+            //@written info use of magic numbers
             getOutputAmountBasedOnInput(
                 1e18,
                 i_poolToken.balanceOf(address(this)),
