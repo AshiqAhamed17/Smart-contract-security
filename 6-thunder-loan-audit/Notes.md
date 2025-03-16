@@ -15,6 +15,9 @@ Liquidity Provider: Someone who deposits money into a protocol to earn interest.
  - AAVE(Thunder Loans): Fees from loans
     deposit -> ThunderLoan -> AssetTokens
 
+## Flash Loans
+- Users can borrow huge amount of assets and use for some other reasons like taking adv of arbitrage and gain profit. Users can borrow as long as they pay it back (with some % fee) within the same tx if not paid the tx will revert
+
 
 
 ### Deployable Logic Contracts:
