@@ -6,8 +6,8 @@
 # TSwap Audit Report
 
 Prepared by: ASHIQ AHAMED
-Lead Auditors:
 
+Lead Auditor:
 - [ASHIQ AHAMED](https://github.com/AshiqAhamed17)
 
 Assisting Auditors:
