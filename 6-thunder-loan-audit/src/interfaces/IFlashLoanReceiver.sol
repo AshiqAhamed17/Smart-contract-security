@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.20;
 
+//@audit-info unused imports
+// We must remove the import from `MockFlashLoanReceiver.sol`
 import { IThunderLoan } from "./IThunderLoan.sol";
 
 /**
