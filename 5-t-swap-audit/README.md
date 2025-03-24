@@ -2,7 +2,7 @@
 <img src="./images/t-swap-youtube-dimensions.png" width="400" alt="t-swap">
 <br/>
 
-# TSwap 
+# TSwap
 
 This project is meant to be a permissionless way for users to swap assets between each other at a fair price. You can think of T-Swap as a decentralized asset/token exchange (DEX). 
 T-Swap is known as an [Automated Market Maker (AMM)](https://chain.link/education-hub/what-is-an-automated-market-maker-amm) because it doesn't use a normal "order book" style exchange, instead it uses "Pools" of an asset. 

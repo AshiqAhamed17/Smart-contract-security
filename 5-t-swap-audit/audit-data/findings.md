@@ -27,11 +27,17 @@ Assisting Auditors:
   - [Issues found](#issues-found)
 - [Findings](#findings)
   - [High](#high)
-    - [\[H-1\] Reentrancy attack in `PuppyRaffle::refund` allows entrant to drain raffle balance](#h-1-reentrancy-attack-in-puppyrafflerefund-allows-entrant-to-drain-raffle-balance)
+    - [\[H-1\] `TSwapPool::deposit` is missing deadline check causing transaction to complete even after the deadline](#h-1-tswappooldeposit-is-missing-deadline-check-causing-transaction-to-complete-even-after-the-deadline)
 
-    - [\[H-2\] Weak randomness in `PuppyRaffle::selectWinner` allows anyone to choose winner and predict the winning puppy](#h-2-weak-randomness-in-puppyraffleselectwinner-allows-anyone-to-choose-winner-and-predict-the-winning-puppy)
+    - [\[H-2\] Incorrect fee calculation in `TSwapPool::getInputAmountBasedOnOutput` causes protocll to take too many tokens from users, resulting in lost fees](#h-2-incorrect-fee-calculation-in-tswappoolgetinputamountbasedonoutput-causes-protocll-to-take-too-many-tokens-from-users-resulting-in-lost-fees)
 
-    - [\[H-3\] Integer overflow of `PuppyRaffle::totalFees` loses fees](#h-3-integer-overflow-of-puppyraffletotalfees-loses-fees)
+    - [\[H-3\] Lack of slippage protection in `TSwapPool::swapExactOutput` causes users to potentially receive way fewer tokens](#h-3-lack-of-slippage-protection-in-tswappoolswapexactoutput-causes-users-to-potentially-receive-way-fewer-tokens)
+
+    - [\[H-4\] `TSwapPool::sellPoolTokens` mismatches input and output tokens causing users to receive the incorrect amount of tokens](#h-4-tswappoolsellpooltokens-mismatches-input-and-output-tokens-causing-users-to-receive-the-incorrect-amount-of-tokens)
+
+    - [\[H-5\] In `TSwapPool::_swap` the extra tokens given to users after every `swapCount` breaks the protocol invariant of `x * y = k`](#h-5-in-tswappoolswap` the extra tokens given to users after every `swapCount` breaks the protocol invariant of `x * y = k`)
+
+
     
 
    - [\[L-1\] `PuppyRaffle::getActivePlayerIndex` returns 0 for non-existing players and for the player at index 0, causing a player at index 0 to incorrectly think they have not entered the raffle](#l-1-puppyrafflegetactiveplayerindex-returns-0-for-non-existing-players-and-for-the-player-at-index-0-causing-a-player-at-index-0-to-incorrectly-think-they-have-not-entered-the-raffle)
@@ -65,18 +71,23 @@ Assisting Auditors:
 
 ```
 ./src/
--- PuppyRaffle.sol
+-- PoolFactory.sol
+-- TSwapPool.sol
+
 ```
 
 # Protocol Summary
 
-Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rarities. A portion of entrance fees go to the winner, and a fee is taken by another address decided by the protocol owner. 
+This project is meant to be a permissionless way for users to swap assets between each other at a fair price. You can think of T-Swap as a decentralized asset/token exchange (DEX). 
+T-Swap is known as an [Automated Market Maker (AMM)](https://chain.link/education-hub/what-is-an-automated-market-maker-amm) because it doesn't use a normal "order book" style exchange, instead it uses "Pools" of an asset. 
+It is similar to Uniswap. To understand Uniswap, please watch this video: [Uniswap Explained](https://www.youtube.com/watch?v=DLu35sIqVTM)
+
 
 ## Roles
 
-- Owner: The only one who can change the `feeAddress`, denominated by the `_owner` variable.
-- Fee User: The user who takes a cut of raffle entrance fees. Denominated by the `feeAddress` variable.
-- Raffle Entrant: Anyone who enters the raffle. Denominated by being in the `players` array.
+- Liquidity Providers: Users who have liquidity deposited into the pools. Their shares are represented by the LP ERC20 tokens. They gain a 0.3% fee every time a swap is made.
+
+- Users: Users who want to swap tokens.
 
 # Executive Summary
 
@@ -84,16 +95,12 @@ Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rar
 
 | Severity | Number of issues found |
 | -------- | ---------------------- |
-| High     | 3                      |
-| Medium   | 3                      |
-| Low      | 2                      |
-| Info     | 5                      |
-| Total    | 13                     |
+| High     | 5                      |
+| Low      | 3                      |
+| Info     | 7                      |
+| Total    | 15                     |
 
 # Findings
-
-
-
 
 # HIGH
 
@@ -188,7 +195,7 @@ We should include a `maxInputAmount` so the user only has to spend that particul
 +       uint256 maxInputAmount,
     .
     .
-    .    
+    .
 
     inputAmount = getInputAmountBasedOnOutput(outputAmount, inputReserves, outputReserves);
 

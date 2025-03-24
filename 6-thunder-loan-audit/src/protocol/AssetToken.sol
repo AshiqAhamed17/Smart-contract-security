@@ -26,12 +26,12 @@ contract AssetToken is ERC20 {
     uint256 private constant STARTING_EXCHANGE_RATE = 1e18;
 
     /*//////////////////////////////////////////////////////////////
-                                 EVENTS
+                                EVENTS
     //////////////////////////////////////////////////////////////*/
     event ExchangeRateUpdated(uint256 newExchangeRate);
 
     /*//////////////////////////////////////////////////////////////
-                               MODIFIERS
+                            MODIFIERS
     //////////////////////////////////////////////////////////////*/
     modifier onlyThunderLoan() {
         if (msg.sender != i_thunderLoan) {
@@ -48,7 +48,7 @@ contract AssetToken is ERC20 {
     }
 
     /*//////////////////////////////////////////////////////////////
-                               FUNCTIONS
+                            FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     constructor(
         address thunderLoan,
