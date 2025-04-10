@@ -158,9 +158,10 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         assetToken.mint(msg.sender, mintAmount);
 
         //@audit follow-up this seems sus
+        //@audit - high , we shouldn't be updating the exchange rate here!!
         uint256 calculatedFee = getCalculatedFee(token, amount);
-        //@follow-up reentrancy
         assetToken.updateExchangeRate(calculatedFee);
+
         token.safeTransferFrom(msg.sender, address(assetToken), amount);
     }
 

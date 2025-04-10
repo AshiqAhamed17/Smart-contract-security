@@ -76,6 +76,7 @@ contract AssetToken is ERC20 {
     function transferUnderlyingTo(address to, uint256 amount) external onlyThunderLoan {
 
         //@follow-up weird ERC20 with USDC
+        //@audit - medium , what if the USDC is black listed, the protocol will be frozen
         i_underlying.safeTransfer(to, amount);
     }
 
