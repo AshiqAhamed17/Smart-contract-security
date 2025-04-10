@@ -140,7 +140,7 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
     //////////////////////////////////////////////////////////////*/
 
     //?q What happens if we deploy the contract and someone else initializes it ?
-    //@audit - low initializers can be front run 
+    //@audit - low initializers can be front run
     function initialize(address tswapAddress) external initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
@@ -156,6 +156,8 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         uint256 mintAmount = (amount * assetToken.EXCHANGE_RATE_PRECISION()) / exchangeRate;
         emit Deposit(msg.sender, token, amount);
         assetToken.mint(msg.sender, mintAmount);
+
+        //@audit follow-up this seems sus
         uint256 calculatedFee = getCalculatedFee(token, amount);
         //@follow-up reentrancy
         assetToken.updateExchangeRate(calculatedFee);
@@ -181,10 +183,11 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         uint256 amountUnderlying = (amountOfAssetToken * exchangeRate) / assetToken.EXCHANGE_RATE_PRECISION();
         emit Redeemed(msg.sender, token, amountOfAssetToken, amountUnderlying);
         assetToken.burn(msg.sender, amountOfAssetToken);
-        //@follow-up reentrancy
         assetToken.transferUnderlyingTo(msg.sender, amountUnderlying);
     }
 
+
+    //@audit-info no natspc
     function flashloan(
         address receiverAddress,
         IERC20 token,
@@ -197,8 +200,7 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
     {
         AssetToken assetToken = s_tokenToAssetToken[token];
         uint256 startingBalance = IERC20(token).balanceOf(address(assetToken));
-
-        //@audit - high if amount < startingBalance then we revert
+        
         if (amount > startingBalance) {
             revert ThunderLoan__NotEnoughTokenBalance(startingBalance, amount);
         }
@@ -263,14 +265,17 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
             return assetToken;
         } else {
             AssetToken assetToken = s_tokenToAssetToken[token];
-            delete s_tokenToAssetToken[token];
+            delete s_tokenToAssetToken[token]; // ?q Does deleting work here ? -> Ok
             emit AllowedTokenSet(token, assetToken, allowed);
             return assetToken;
         }
     }
 
+    // Calculating the fee for the flash loan
     function getCalculatedFee(IERC20 token, uint256 amount) public view returns (uint256 fee) {
         //slither-disable-next-line divide-before-multiply
+        // ? is it ignoring decimals ? what if the decimal is 6
+        // @audit - high j
         uint256 valueOfBorrowedToken = (amount * getPriceInWeth(address(token))) / s_feePrecision;
         //slither-disable-next-line divide-before-multiply
         fee = (valueOfBorrowedToken * s_flashLoanFee) / s_feePrecision;
