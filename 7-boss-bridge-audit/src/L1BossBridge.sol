@@ -62,11 +62,13 @@ contract L1BossBridge is Ownable, Pausable, ReentrancyGuard {
      * @notice Locks tokens in the vault and emits a Deposit event
      * the unlock event will trigger the L2 minting process. There are nodes listening
      * for this event and will mint the corresponding tokens on L2. This is a centralized process.
-     * 
+     *
      * @param from The address of the user who is depositing tokens
      * @param l2Recipient The address of the user who will receive the tokens on L2
      * @param amount The amount of tokens to deposit
      */
+
+    //@audit - high If a user approves the bridge, any other users can steal their funds
     function depositTokensToL2(address from, address l2Recipient, uint256 amount) external whenNotPaused {
         if (token.balanceOf(address(vault)) + amount > DEPOSIT_LIMIT) {
             revert L1BossBridge__DepositLimitReached();

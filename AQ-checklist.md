@@ -549,3 +549,7 @@ Pricefeed
 [AC-07] - Borrowing a AAVE [siloed asset](https://docs.aave.com/developers/whats-new/siloed-borrowing) will prohibits you from borrowing any other asset. Use `getSiloedBorrowing(address asset)` to know.
 
 [AC-06] - On AAVE, what happen if you reach to maximum debt on a isolated asset? (DOS?)
+
+---
+
+- Check for zero address when using ecrecover()
