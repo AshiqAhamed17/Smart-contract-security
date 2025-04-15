@@ -27,6 +27,7 @@ import { L1Vault } from "./L1Vault.sol";
 contract L1BossBridge is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
+    //@audit-info this should be constant
     uint256 public DEPOSIT_LIMIT = 100_000 ether;
 
     IERC20 public immutable token;
@@ -69,6 +70,8 @@ contract L1BossBridge is Ownable, Pausable, ReentrancyGuard {
      */
 
     //@audit - high If a user approves the bridge, any other users can steal their funds
+
+    //@audit - high If the vault approves the bridge... can a user steal funds from the vault ?
     function depositTokensToL2(address from, address l2Recipient, uint256 amount) external whenNotPaused {
         if (token.balanceOf(address(vault)) + amount > DEPOSIT_LIMIT) {
             revert L1BossBridge__DepositLimitReached();
@@ -76,6 +79,8 @@ contract L1BossBridge is Ownable, Pausable, ReentrancyGuard {
         token.safeTransferFrom(from, address(vault), amount);
 
         // Our off-chain service picks up this event and mints the corresponding tokens on L2
+
+        //@audit - low Should follow CEI 
         emit Deposit(from, l2Recipient, amount);
     }
 
