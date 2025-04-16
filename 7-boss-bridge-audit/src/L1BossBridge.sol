@@ -80,14 +80,14 @@ contract L1BossBridge is Ownable, Pausable, ReentrancyGuard {
 
         // Our off-chain service picks up this event and mints the corresponding tokens on L2
 
-        //@audit - low Should follow CEI 
+        //@audit - low Should follow CEI
         emit Deposit(from, l2Recipient, amount);
     }
 
     /*
      * @notice This is the function responsible for withdrawing tokens from L2 to L1.
      * Our L2 will have a similar mechanism for withdrawing tokens from L1 to L2.
-     * @notice The signature is required to prevent replay attacks. 
+     * @notice The signature is required to prevent replay attacks.
      * 
      * @param to The address of the user who will receive the tokens on L1
      * @param amount The amount of tokens to withdraw
@@ -116,6 +116,9 @@ contract L1BossBridge is Ownable, Pausable, ReentrancyGuard {
      * @param s The s value of the signature
      * @param message The message/data to be sent to L1 (can be blank)
      */
+
+    //@audit - high SignatureRepay attack... user can call using the same signature(v, r, s) and pull the funds
+    // To prevent - Use nonce or deadline
     function sendToL1(uint8 v, bytes32 r, bytes32 s, bytes memory message) public nonReentrant whenNotPaused {
         address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(keccak256(message)), v, r, s);
 
@@ -125,6 +128,7 @@ contract L1BossBridge is Ownable, Pausable, ReentrancyGuard {
 
         (address target, uint256 value, bytes memory data) = abi.decode(message, (address, uint256, bytes));
 
+        //@audit-info gas bomb attackers can spend a lot of gas to call the target with large message
         (bool success,) = target.call{ value: value }(data);
         if (!success) {
             revert L1BossBridge__CallFailed();
