@@ -1,3 +1,64 @@
+# [M-1] Unchecked Return Value of transferFrom May Lead to Undetected Token Transfer Failures
+
+## Summary
+
+A transferFrom call is made to an ERC20 token contract without verifying its return value. This can lead to unexpected behavior if the transfer fails silently (i.e., returns false but does not revert).&#x20;
+
+## Vulnerability Details
+
+ERC20’s transferFrom() function is defined to return a bool indicating success. Some non-standard or outdated tokens may return false rather than reverting on failure.
+
+In both of these functions i.e 
+`RockPaperScissors::createGameWithToken` and `RockPaperScissors::joinGameWithToken`have the same issue
+
+```Solidity
+// Transfer token to contract
+winningToken.transferFrom(msg.sender, address(this), 1);
+```
+
+#
+3 Impact
+
+**Medium.**
+
+* Failing to check the result may cause logic to proceed as if a token was transferred, when in fact it was not.
+* This is particularly risky when interacting with **non-compliant ERC20 tokens**, or tokens like USDT that do not revert on failure.
+
+## Tools Used
+
+* Manual Review
+* Slither
+* OpenZeppelin ERC20 standard documentation
+
+## Recommendations
+
+* Use OpenZeppelin’s SafeERC20 wrapper which handles non-reverting tokens safely:
+
+```diff
+    pragma solidity ^0.8.13;
+
+   import "./WinningToken.sol";
++  import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
++  using SafeERC20 for IERC20;
+   .
+   .
+   .
+
+   function createGameWithToken(uint256 _totalTurns, uint256 _timeoutInterval) external returns (uint256) {
+
+-     winningToken.transferFrom(msg.sender, address(this), 1)
++     winningToken.safeTransferFrom(msg.sender, address(this), 1);
+
+```
+
+•	Alternatively, explicitly check the return value:
+
+```solidity
+  require(winningToken.transferFrom(msg.sender, address(this), 1), "Transfer failed");
+```
+
+
+
 # [#L-1] Centralization Risk Due to Owner Privileges in WinningToken
 
 ## Summary

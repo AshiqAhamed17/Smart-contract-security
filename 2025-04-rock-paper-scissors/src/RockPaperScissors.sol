@@ -128,6 +128,7 @@ contract RockPaperScissors {
         require(_timeoutInterval >= 5 minutes, "Timeout must be at least 5 minutes");
 
         // Transfer token to contract
+        //@audit - medium Ignores return value
         winningToken.transferFrom(msg.sender, address(this), 1);
 
         uint256 gameId = gameCounter++;
@@ -173,10 +174,13 @@ contract RockPaperScissors {
         require(game.state == GameState.Created, "Game not open to join");
         require(game.playerA != msg.sender, "Cannot join your own game");
         require(block.timestamp <= game.joinDeadline, "Join deadline passed");
+
+        //@audit-info The log message is wrong - It should be "This game doesn't require ETH bet" becoz it's using token
         require(game.bet == 0, "This game requires ETH bet");
         require(winningToken.balanceOf(msg.sender) >= 1, "Must have winning token");
 
         // Transfer token to contract
+        //@audit - medium Ignores return value
         winningToken.transferFrom(msg.sender, address(this), 1);
 
         game.playerB = msg.sender;
