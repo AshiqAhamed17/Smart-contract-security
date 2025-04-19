@@ -23,7 +23,7 @@ contract WinningToken is ERC20, ERC20Burnable, Ownable {
      * @return The number of decimals (0 for non-divisible tokens)
      */
 
-    //? Return 0, Will it affect something and break ?
+    //?ok Return 0, Will it affect something and break ? - It's a ERC20 override function.
     //@audit-info This function is never used else where
     function decimals() public view virtual override returns (uint8) {
         return 0; // Non-divisible tokens
