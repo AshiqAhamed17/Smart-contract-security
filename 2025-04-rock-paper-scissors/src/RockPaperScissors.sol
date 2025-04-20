@@ -95,7 +95,7 @@ contract RockPaperScissors {
      */
     function createGameWithEth(uint256 _totalTurns, uint256 _timeoutInterval) external payable returns (uint256) {
         require(msg.value >= minBet, "Bet amount too small");
-        require(_totalTurns > 0, "Must have at least one turn");
+        require(_totalTurns > 0, "Must have at least one turn"); //? What if there is only one turn ?
         require(_totalTurns % 2 == 1, "Total turns must be odd");
         require(_timeoutInterval >= 5 minutes, "Timeout must be at least 5 minutes");
 
@@ -105,7 +105,7 @@ contract RockPaperScissors {
         game.playerA = msg.sender;
         game.bet = msg.value;
         game.timeoutInterval = _timeoutInterval;
-        game.creationTime = block.timestamp;
+        game.creationTime = block.timestamp; //? can the miner manipulate this ?
         game.joinDeadline = block.timestamp + joinTimeout;
         game.totalTurns = _totalTurns;
         game.currentTurn = 1;
@@ -128,7 +128,7 @@ contract RockPaperScissors {
         require(_timeoutInterval >= 5 minutes, "Timeout must be at least 5 minutes");
 
         // Transfer token to contract
-        //@audit - medium Ignores return value
+        //Done @audit - medium Ignores return value
         winningToken.transferFrom(msg.sender, address(this), 1);
 
         uint256 gameId = gameCounter++;
@@ -180,7 +180,7 @@ contract RockPaperScissors {
         require(winningToken.balanceOf(msg.sender) >= 1, "Must have winning token");
 
         // Transfer token to contract
-        //@audit - medium Ignores return value
+        //Done @audit - medium Ignores return value
         winningToken.transferFrom(msg.sender, address(this), 1);
 
         game.playerB = msg.sender;
