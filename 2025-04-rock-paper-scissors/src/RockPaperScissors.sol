@@ -165,7 +165,7 @@ contract RockPaperScissors {
     }
 
     /**
-     * @notice Join an existing game with token
+     * @notice Join an existing game with token 
      * @param _gameId ID of the game to join
      */
     function joinGameWithToken(uint256 _gameId) external {
