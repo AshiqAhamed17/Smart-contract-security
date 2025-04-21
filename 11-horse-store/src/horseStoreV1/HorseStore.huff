@@ -1,0 +1,11 @@
+
+// 60008060093d393df3 => Contract Creation bytecode
+#define macro MAIN() = takes(0) returns(0) {
+    0x00
+    calldataload
+    0xE0
+    shr
+    // 60058060093d393df3
+    // 5f3560e01c => FunctionSelector
+    // [FunctionSelector]
+}
