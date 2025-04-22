@@ -1,5 +1,10 @@
 
 // 60008060093d393df3 => Contract Creation bytecode
+
+/* Interface */
+#define function updateHorseNumber(uint256) nonpayable returns()
+#define function readNumberOfHorses() view returns(uint256)
+
 #define macro MAIN() = takes(0) returns(0) {
     0x00
     calldataload
@@ -8,4 +13,39 @@
     // 60058060093d393df3
     // 5f3560e01c => FunctionSelector
     // [FunctionSelector]
+
+    // Update => 0xcdfead2e
+    // Read => 0xe026c017
+
+    // updateHorseNumber function selector
+    dup1                // [FunctionSelector, FunctionSelector]
+    __FUNC_SIG(updateHorseNumber)         // [0xcdfead2e, FunctionSelector,FunctionSelector] => eq compare these two and return (1) if equals or else (0)
+    eq                  // [true_if_funcSelector_matches, FunctionSelector] => [1]
+
+    // Jump to updateHorseNumber function if true
+    updateJump          // [updateHorseNumberProgramCounter, true/false]
+    jumpi               // if true then jumpi executes => [FunctionSelector]
+    __FUNC_SIG(readNumberOfHorses)
+                                    // readNumberOfHorses function selector, 0xe026c017
+                                    // [0xe026c017, FunctionSelector]
+    eq                  // [true_if_funcSelector_matches, FunctionSelector] => [1]
+
+    // Jump to readNumberOfHorses function if true
+    readJump          // [readNumberOfHorsesProgramCounter, true/false]
+    jumpi              // if true then jumpi executes => []
+
+    0x00 0x00 revert   //[0, 0] => []
+
+    updateJump:
+        SET_NUMBER_OF_HORSES()
+
+    readJump:
+        GET_NUMBER_OF_HORSES()
+
+    // 60108060093d393df35f3560e01c63cdfead2e1461000f575b
+    //                   5f3560e01c63cdfead2e1461000f575b => Runtime bytecode
 }
+
+#define macro SET_NUMBER_OF_HORSES() = takes(0) returns(0) {}
+
+#define macro GET_NUMBER_OF_HORSES() = takes(0) returns(0) {}
