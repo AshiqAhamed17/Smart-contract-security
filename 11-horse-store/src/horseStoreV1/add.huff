@@ -1,0 +1,13 @@
+
+#define function add(uint256, uint256) view returns (uint256)
+
+#define macro MAIN() = takes(0) returns(0) {
+
+    0x00 calldataload       // [arg1] => load first 32 bytes onto the stack - arg1
+    0x20 calldataload       // [arg2] => load second 32 bytes onto the stack - arg2
+
+    add             // [arg1 + arg2] => add arg1 and arg2 and puts the result onto the stack
+
+    0x00 mstore     // place [arg1 + arg2] into the memory
+    0x20 0x00 return // return the result from the memory
+} // 5f35602035015f5260205ff3
