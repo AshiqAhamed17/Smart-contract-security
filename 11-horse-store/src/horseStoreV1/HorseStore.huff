@@ -49,14 +49,30 @@
     //                   5f3560e01c63cdfead2e1461000f575b => Runtime bytecode
 }
 
+
+// 0xcdfead2e00000000000000000000000000000000000000000000000000000007 => Calldata
 #define macro SET_NUMBER_OF_HORSES() = takes(0) returns(0) {
 
-    0x04
-    calldataload
+    0x04                    // [0x04] its the offset , Start loading from byte 0x04, because that’s where my actual argument begins.
+    calldataload            // [argument_value]
 
-    [NUMBER_OF_HORSES_LOCATION]
-    sstore
-    stop
+    [NUMBER_OF_HORSES_LOCATION] // [storage_slot, argument_value]
+
+    sstore  // pops: storage_slot and argument_value
+    stop    // Stops the execution does not revert.
 }
 
-#define macro GET_NUMBER_OF_HORSES() = takes(0) returns(0) {}
+#define macro GET_NUMBER_OF_HORSES() = takes(0) returns(0) {
+    // 1. Get the storage slot
+    // 2. Load the value of that slot to memory
+    // 3. Return the value form the memory
+
+    [NUMBER_OF_HORSES_LOCATION]  // [key] => index of the slot
+    sload                        // [value] => value fo the slot at index
+    0x00                         // [0x00, value] => offset as 0x00 . where are memory should the value be stored
+    mstore                       // []         | Memory: [value]
+
+    0x20                         // Size of the value | 0x20 = 32 bytes
+    0x00                         // Offset , the location of the value in memory to return
+    return                       // Return the value from the memory at the offset
+}
