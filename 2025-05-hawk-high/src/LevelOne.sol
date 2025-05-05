@@ -67,6 +67,7 @@ contract LevelOne is Initializable, UUPSUpgradeable {
     event Expelled(address indexed);
     event SchoolInSession(uint256 indexed startTime, uint256 indexed endTime);
     event ReviewGiven(address indexed student, bool indexed review, uint256 indexed studentScore);
+    //@audit - low Graduate event not emitted anywhere in the contract
     event Graduated(address indexed levelTwo);
 
     ////////////////////////////////
@@ -118,6 +119,9 @@ contract LevelOne is Initializable, UUPSUpgradeable {
     /////                      /////
     ////////////////////////////////
     /// Constructor for logic contracts
+    /// sets up storage in the proxy during deployment.
+    //@audit-ok can this have two owners ? - No becoz of initializer modifier
+    //? Storage collisions ?
     function initialize(address _principal, uint256 _schoolFees, address _usdcAddress) public initializer {
         if (_principal == address(0)) {
             revert HH__ZeroAddress();
@@ -125,6 +129,7 @@ contract LevelOne is Initializable, UUPSUpgradeable {
         if (_schoolFees == 0) {
             revert HH__ZeroValue();
         }
+        //? What is the usdcAddress is a weird ERC20 address rather than usdcAddress ?
         if (_usdcAddress == address(0)) {
             revert HH__ZeroAddress();
         }
@@ -299,6 +304,7 @@ contract LevelOne is Initializable, UUPSUpgradeable {
         emit ReviewGiven(_student, review, studentScore[_student]);
     }
 
+    /// Performs UUPS upgrade
     function graduateAndUpgrade(address _levelTwo, bytes memory) public onlyPrincipal {
         if (_levelTwo == address(0)) {
             revert HH__ZeroAddress();
@@ -306,6 +312,7 @@ contract LevelOne is Initializable, UUPSUpgradeable {
 
         uint256 totalTeachers = listOfTeachers.length;
 
+        //@audit - high wrong calculation for payPerTeacher
         uint256 payPerTeacher = (bursary * TEACHER_WAGE) / PRECISION;
         uint256 principalPay = (bursary * PRINCIPAL_WAGE) / PRECISION;
 
@@ -316,6 +323,8 @@ contract LevelOne is Initializable, UUPSUpgradeable {
         }
 
         usdc.safeTransfer(principal, principalPay);
+
+        //@audit - low needs a event to emit -  emit Graduated(_leveltwo);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyPrincipal {}
