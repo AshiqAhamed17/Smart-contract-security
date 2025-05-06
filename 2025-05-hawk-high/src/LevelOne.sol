@@ -289,7 +289,7 @@ contract LevelOne is Initializable, UUPSUpgradeable {
             revert HH__StudentDoesNotExist();
         }
 
-        //@audit - high reviewCount is never updated, so its always < 5.
+        //@audit-ok - high reviewCount is never updated, so its always < 5.
         require(reviewCount[_student] < 5, "Student review count exceeded!!!");
         require(block.timestamp >= lastReviewTime[_student] + reviewTime, "Reviews can only be given once per week");
 
@@ -324,7 +324,7 @@ contract LevelOne is Initializable, UUPSUpgradeable {
 
         usdc.safeTransfer(principal, principalPay);
 
-        //@audit - low needs a event to emit -  emit Graduated(_leveltwo);
+        //@audit-ok - low needs a event to emit -  emit Graduated(_leveltwo);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyPrincipal {}

@@ -90,8 +90,57 @@ contract LevelOneAndGraduateTest is Test {
 
         // Step 3: Final assertion - studentScore drops below graduation threshold
         assertEq(levelOneProxy.studentScore(dan), 0);
+    }
+
+        // levelTwoImplementation = new LevelTwo();
+        // levelTwoImplementationAddress = address(levelTwoImplementation);
+
+        // bytes memory data = abi.encodeCall(LevelTwo.graduate, ());
+
+        // vm.prank(principal);
+        // levelOneProxy.graduateAndUpgrade(levelTwoImplementationAddress, data);
+
+        // LevelTwo levelTwoProxy = LevelTwo(proxyAddress);
+
+        // console2.log(levelTwoProxy.bursary());
+        // console2.log(levelTwoProxy.getTotalStudents());
+
+    function test_wrongPayPerTeacher() view public {
+        uint256 bursary = 1000; // Mocked bursary amount
+        uint256 totalTeachers = 2;
+
+        // Simulate current (broken) logic
+        uint256 payPerTeacher = (bursary * levelOneProxy.TEACHER_WAGE()) / levelOneProxy.PRECISION();
+
+        for (uint256 n = 0; n < totalTeachers; n++) {
+            bursary = bursary - payPerTeacher;
+        }
+        console2.log("Bursary: ",bursary); // should be 650 but it's 300 due to wrong payPerTeacher calculation.
+
+        // bursary should be 650 as only 35% of bursary is paid to teachers
+        assertLe(bursary, 650); // Breaking of invariant - teachers share of 35% of bursary
 
     }
+
+    function test_wrongPayPerTeacher2() view public {
+    uint256 bursary = 1000; // Mocked bursary amount
+    uint256 totalTeachers = 2;
+
+    // Simulate current (broken) logic
+    uint256 payPerTeacher = (bursary * levelOneProxy.TEACHER_WAGE()) / levelOneProxy.PRECISION();
+
+    uint256 totalPaid = payPerTeacher * totalTeachers;
+
+    console2.log("Bursary:", bursary); // 1000
+    console2.log("Pay per teacher:", payPerTeacher); // 350
+    console2.log("Total paid to teachers:", totalPaid); // 750
+
+    // Invariant: Total teacher payment should be 35% of bursary (i.e., 350)
+    uint256 expectedTotal = (bursary * levelOneProxy.TEACHER_WAGE()) / levelOneProxy.PRECISION();
+
+    // Breaks invariant: actual > expected
+    assertGt(totalPaid, expectedTotal); // 750 > 350
+}
 
 
 
