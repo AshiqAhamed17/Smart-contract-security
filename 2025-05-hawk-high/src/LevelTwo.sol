@@ -8,7 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract LevelTwo is Initializable {
     using SafeERC20 for IERC20;
 
-    //@audit - high Storage Collision to LevelOne.sol!!!
+    //@audit-ok - high Storage Collision to LevelOne.sol!!!
     address principal;
     bool inSession;
     uint256 public sessionEnd;

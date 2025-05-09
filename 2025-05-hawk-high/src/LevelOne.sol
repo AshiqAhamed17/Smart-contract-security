@@ -67,7 +67,7 @@ contract LevelOne is Initializable, UUPSUpgradeable {
     event Expelled(address indexed);
     event SchoolInSession(uint256 indexed startTime, uint256 indexed endTime);
     event ReviewGiven(address indexed student, bool indexed review, uint256 indexed studentScore);
-    //@audit - low Graduate event not emitted anywhere in the contract
+    //@audit-ok - low Graduate event not emitted anywhere in the contract
     event Graduated(address indexed levelTwo);
 
     ////////////////////////////////
@@ -312,7 +312,7 @@ contract LevelOne is Initializable, UUPSUpgradeable {
 
         uint256 totalTeachers = listOfTeachers.length;
 
-        //@audit - high wrong calculation for payPerTeacher
+        //@audit-ok - high wrong calculation for payPerTeacher
         uint256 payPerTeacher = (bursary * TEACHER_WAGE) / PRECISION;
         uint256 principalPay = (bursary * PRINCIPAL_WAGE) / PRECISION;
 
