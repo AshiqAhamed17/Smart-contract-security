@@ -1,12 +1,10 @@
-
-# Ignore dependencies
-lib/
-
-# Ignore Forge build artifacts
-out/
-cache/
-
-# Ignore Foundry temporary files
-broadcast/
+/2025-05-weather-witness/node_modules
+/2025-05-weather-witness/cache
+/2025-05-weather-witness/out
 
 .vscode
+**/.git
+**/lib/forge-std
+**/lib/foundry-huff
+
+4-puppy-raffle-audit
