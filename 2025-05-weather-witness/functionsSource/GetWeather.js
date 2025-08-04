@@ -33,10 +33,13 @@ if (weather_id_x === 2) weather_enum = 3;
 else if (weather_id_x === 3 || weather_id_x === 5) weather_enum = 2;
 // snow
 else if (weather_id_x === 6) weather_enum = 5;
+
 // clear
 else if (weather_id === 800) weather_enum = 0;
+
 // cloudy
 else if (weather_id_x === 8) weather_enum = 1;
+
 // windy
 else weather_enum = 4;
 

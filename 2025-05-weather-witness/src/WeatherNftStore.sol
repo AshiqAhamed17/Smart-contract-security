@@ -9,13 +9,14 @@ contract WeatherNftStore {
     error WeatherNft__Unauthorized();
 
     // enums
-    enum Weather {
-        SUNNY,
-        CLOUDY,
-        RAINY,
-        THUNDERSTORM,
-        WINDY,
-        SNOW
+    //@audit Mismatch enum from the GetWeather.js
+    enum Weather { 
+        SUNNY, //0
+        CLOUDY, //1
+        RAINY, //2
+        THUNDERSTORM, //3
+        WINDY, //4
+        SNOW //5
     }
 
     // structs

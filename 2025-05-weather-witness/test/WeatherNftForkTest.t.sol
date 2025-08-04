@@ -13,6 +13,8 @@ contract WeatherNftForkTest is Test {
     address functionsRouter;
     address user = makeAddr("user");
 
+    event WeatherNFTMintRequestSent(address user, string pincode, string isoCode, bytes32 requestId);
+
     function setUp() external {
         // // You can replace the weather nft contract with your own deployed contract
         // weatherNft = WeatherNft(0x4fF356bB2125886d048038386845eCbde022E15e);
@@ -149,5 +151,44 @@ contract WeatherNftForkTest is Test {
         console.log("Packed2 hash: ");
         console.logBytes32(keccak256(packed2)); //0xacd0c377fe36d5b209125185bc3ac41155ed1bf7103ef9f0c2aff4320460b6df
     }
+
+    function testEmptyLocationTriggersRequest() public {
+    string memory emptyPincode = "";
+    string memory emptyIsoCode = "";
+
+    // Call as a regular user with 0.01 ETH (assuming current mint price)
+    weatherNft.requestMintWeatherNFT{value: 0.01 ether}(
+        emptyPincode,
+        emptyIsoCode,
+        false,      // no keeper
+        0,          // heartbeat
+        0           // LINK
+    );
+
+    // Expectation: Oracle request is still triggered even though input is empty
+    // This can cause failures or wasted LINK usage
+}
+
+function testMintAllowsEmptyPincodeAndIsoCode() public {
+    string memory emptyPincode = "";
+    string memory emptyIsoCode = "";
+
+    // Expect the function NOT to revert on bad input
+    vm.expectEmit(true, true, true, true);
+    emit WeatherNFTMintRequestSent(
+        address(this), // sender
+        emptyPincode,
+        emptyIsoCode,
+        bytes32(0) // request ID will be overwritten in actual call, so allow wildcard if needed
+    );
+
+    weatherNft.requestMintWeatherNFT{value: 0.01 ether}(
+        emptyPincode,
+        emptyIsoCode,
+        false,      // don't register keeper
+        0,          // heartbeat
+        0           // LINK deposit
+    );
+}
 
 }
