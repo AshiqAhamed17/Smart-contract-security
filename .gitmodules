@@ -4,3 +4,9 @@
 [submodule "11-horse-store/lib/foundry-huff"]
 	path = 11-horse-store/lib/foundry-huff
 	url = https://github.com/huff-language/foundry-huff
+[submodule "2025-07-last-man-standing/lib/openzeppelin-contracts"]
+	path = 2025-07-last-man-standing/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "2025-07-last-man-standing/lib/forge-std"]
+	path = 2025-07-last-man-standing/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std

@@ -185,7 +185,7 @@ contract Game is Ownable {
      */
     function claimThrone() external payable gameNotEnded nonReentrant {
         require(msg.value >= claimFee, "Game: Insufficient ETH sent to claim the throne.");
-        require(msg.sender == currentKing, "Game: You are already the king. No need to re-claim.");
+        require(msg.sender != currentKing, "Game: You are already the king. No need to re-claim.");
 
         uint256 sentAmount = msg.value;
         uint256 previousKingPayout = 0;
